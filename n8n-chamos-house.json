@@ -1,0 +1,67 @@
+{
+  "name": "Chamos House - Generador de Pedidos",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "e4448557-0a27-4a0b-9c60-848cf6c41b8c",
+      "name": "Testear Pedido (Manual)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      telefono: \"50688887777\",\n      nombre_cliente: \"Juan Pérez\",\n      metodo_pago: \"efectivo\",\n      notas: \"Sin cebolla en la hamburguesa, refresco de cola\",\n      items: [\n        { producto_id: 1, cantidad: 2, modificadores: { sin_cebolla: true } },\n        { producto_id: 2, cantidad: 1, modificadores: null }\n      ]\n    }\n  }\n];"
+      },
+      "id": "3be93e25-132d-45be-b9f1-d00e1cf20f69",
+      "name": "Crear JSON Estructurado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0],
+      "notesInFlow": true,
+      "notes": "Simula la salida de la IA extraída de un WhatsApp"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/webhooks/pedido",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "7b830d1f-8646-4b8c-aee4-cf871eb9c9b5",
+      "name": "POST a Chamos House",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [440, 0]
+    }
+  ],
+  "connections": {
+    "Testear Pedido (Manual)": {
+      "main": [
+        [
+          {
+            "node": "Crear JSON Estructurado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear JSON Estructurado": {
+      "main": [
+        [
+          {
+            "node": "POST a Chamos House",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
