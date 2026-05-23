@@ -1,8 +1,8 @@
 import type { Request, Response } from 'express';
-import { PedidoService } from '../services/pedidoService';
-import { emitPedidoActualizado } from '../socket/handlers/cocinaHandler';
+import { PedidoService, mapPedidoToSocketPayload } from '../services/pedidoService';
+import { emitPedidoActualizado, emitNuevoPedido } from '../socket/handlers/cocinaHandler';
 import { success, paginated } from '../utils/apiResponse';
-import type { EstadoPedido, MetodoPago } from '../types';
+import type { EstadoPedido, MetodoPago, WebhookPedidoPayload } from '../types';
 
 export class PedidoController {
   static async listar(req: Request, res: Response): Promise<Response> {
@@ -53,5 +53,13 @@ export class PedidoController {
       pedido_id: resultado.pedidoId,
       estado: resultado.nuevoEstado,
     }, 'Estado de pedido actualizado');
+  }
+
+  static async crear(req: Request, res: Response): Promise<Response> {
+    const payload = req.body as WebhookPedidoPayload;
+    const pedido = await PedidoService.crearPedidoDesdeWebhook(payload);
+    emitNuevoPedido(mapPedidoToSocketPayload(pedido));
+
+    return success(res, pedido, 'Pedido creado manualmente', 201);
   }
 }

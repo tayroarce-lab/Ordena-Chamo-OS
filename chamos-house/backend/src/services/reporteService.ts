@@ -77,11 +77,11 @@ export class ReporteService {
       DetallePedido.findAll({
         attributes: [
           'producto_id',
-          [sequelize.fn('SUM', sequelize.col('detalle_pedidos.cantidad')), 'total_vendido'],
+          [sequelize.fn('SUM', sequelize.col('DetallePedido.cantidad')), 'total_vendido'],
           [
             sequelize.fn(
               'SUM',
-              sequelize.literal('detalle_pedidos.cantidad * detalle_pedidos.p_unitario')
+              sequelize.literal('DetallePedido.cantidad * DetallePedido.p_unitario')
             ),
             'ingresos',
           ],

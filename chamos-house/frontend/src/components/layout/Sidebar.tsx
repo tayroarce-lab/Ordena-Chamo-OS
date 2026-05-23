@@ -11,6 +11,8 @@ import clsx from 'clsx';
 import { NAV_ITEMS } from '@/utils/constants';
 import { useAuth } from '@/hooks/useAuth';
 
+import { useUIStore } from '@/store/uiStore';
+
 const iconMap = {
   LayoutDashboard,
   ChefHat,
@@ -25,14 +27,17 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed = false }: SidebarProps) {
   const { usuario, logout, hasRole } = useAuth();
+  const { sidebarOpen } = useUIStore();
 
   const visibleItems = NAV_ITEMS.filter((item) => hasRole([...item.roles]));
 
   return (
     <aside
       className={clsx(
-        'flex h-full flex-col border-r border-border-subtle bg-surface transition-all duration-200',
-        collapsed ? 'w-16' : 'w-60',
+        'flex h-full flex-col bg-surface transition-all duration-300 ease-in-out',
+        sidebarOpen
+          ? 'w-60 border-r border-border-subtle'
+          : 'w-0 overflow-hidden border-r-0 opacity-0 pointer-events-none'
       )}
     >
       <div className={clsx('border-b border-border-subtle p-4', collapsed && 'px-2')}>

@@ -33,4 +33,19 @@ export const pedidoService = {
   actualizarEstado: async (pedidoId: number, estado: EstadoPedido): Promise<void> => {
     await apiClient.patch(`/pedidos/${pedidoId}/estado`, { estado });
   },
+
+  create: async (input: {
+    telefono: string;
+    nombre_cliente?: string;
+    metodo_pago: 'efectivo' | 'tarjeta' | 'transferencia' | 'zelle' | string;
+    notas?: string;
+    items: Array<{
+      producto_id: number;
+      cantidad: number;
+      modificadores?: Record<string, any> | null;
+    }>;
+  }): Promise<Pedido> => {
+    const { data } = await apiClient.post<ApiSuccess<Pedido>>('/pedidos', input);
+    return data.data;
+  },
 };

@@ -6,6 +6,7 @@ import {
   actualizarEstadoValidator,
   pedidoHistorialValidator,
   pedidoIdValidator,
+  webhookPedidoValidator,
 } from '../middlewares/validators/pedido.validators';
 import { asyncHandler } from '../utils/asyncHandler';
 
@@ -34,6 +35,13 @@ router.patch(
   actualizarEstadoValidator,
   runValidation,
   asyncHandler(PedidoController.actualizarEstado)
+);
+
+router.post(
+  '/',
+  webhookPedidoValidator,
+  runValidation,
+  asyncHandler(PedidoController.crear)
 );
 
 export default router;
