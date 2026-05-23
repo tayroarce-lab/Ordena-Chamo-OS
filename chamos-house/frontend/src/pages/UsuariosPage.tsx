@@ -1,45 +1,64 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, Users } from 'lucide-react';
+import clsx from 'clsx';
 import { Header } from '@/components/layout/Header';
 import { UsuariosTable } from '@/components/usuarios/UsuariosTable';
 import { UsuarioForm } from '@/components/usuarios/UsuarioForm';
 import { Button } from '@/components/ui/Button';
+import { Drawer } from '@/components/ui/Drawer';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Modal } from '@/components/ui/Modal';
+import { Input } from '@/components/ui/Input';
 import { SkeletonTable } from '@/components/ui/Skeleton';
 import { usuarioService } from '@/services/usuarioService';
-import type { Usuario, UsuarioCreateInput } from '@/types/usuario';
+import type { RolUsuario, Usuario, UsuarioCreateInput } from '@/types/usuario';
+
+type FiltroRol = RolUsuario | 'todos';
 
 export function UsuariosPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [filtroRol, setFiltroRol] = useState<FiltroRol>('todos');
+  const [busqueda, setBusqueda] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<Usuario | null>(null);
 
   const load = useCallback(async () => {
     setIsLoading(true);
     try {
-      const { usuarios: lista } = await usuarioService.getAll({ limit: 100 });
+      const { usuarios: lista } = await usuarioService.getAll({
+        limit: 100,
+        rol: filtroRol === 'todos' ? undefined : filtroRol,
+        search: busqueda.trim() || undefined,
+      });
       setUsuarios(lista);
     } catch {
       setUsuarios([]);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [filtroRol, busqueda]);
 
   useEffect(() => {
-    void load();
+    const t = setTimeout(() => void load(), 300);
+    return () => clearTimeout(t);
   }, [load]);
+
+  const contadores = useMemo(() => {
+    const base = { todos: usuarios.length, admin: 0, cocina: 0, cliente: 0 };
+    for (const u of usuarios) {
+      base[u.rol] += 1;
+    }
+    return base;
+  }, [usuarios]);
 
   const handleCreate = () => {
     setEditing(null);
-    setModalOpen(true);
+    setDrawerOpen(true);
   };
 
   const handleEdit = (usuario: Usuario) => {
     setEditing(usuario);
-    setModalOpen(true);
+    setDrawerOpen(true);
   };
 
   const handleToggleActivo = async (usuario: Usuario) => {
@@ -55,15 +74,22 @@ export function UsuariosPage() {
     } else {
       await usuarioService.create(data);
     }
-    setModalOpen(false);
+    setDrawerOpen(false);
     await load();
   };
+
+  const roleTabs: { id: FiltroRol; label: string }[] = [
+    { id: 'todos', label: `Todos (${contadores.todos})` },
+    { id: 'admin', label: `Admin (${contadores.admin})` },
+    { id: 'cocina', label: `Cocina (${contadores.cocina})` },
+    { id: 'cliente', label: `Clientes (${contadores.cliente})` },
+  ];
 
   return (
     <div>
       <Header
         title="Usuarios"
-        subtitle={`${usuarios.length} registrados`}
+        subtitle="Gestión de staff y clientes"
         actions={
           <Button onClick={handleCreate}>
             <Plus className="h-4 w-4" />
@@ -71,6 +97,32 @@ export function UsuariosPage() {
           </Button>
         }
       />
+
+      <div className="mb-4">
+        <Input
+          placeholder="Buscar por nombre o teléfono..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+        />
+      </div>
+
+      <div className="mb-6 flex flex-wrap gap-2">
+        {roleTabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setFiltroRol(tab.id)}
+            className={clsx(
+              'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+              filtroRol === tab.id
+                ? 'bg-accent font-bold text-primary'
+                : 'border border-border-subtle bg-elevated text-text-secondary hover:text-text-primary',
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
       {isLoading ? (
         <SkeletonTable rows={6} />
@@ -85,17 +137,17 @@ export function UsuariosPage() {
         <UsuariosTable usuarios={usuarios} onEdit={handleEdit} onToggleActivo={handleToggleActivo} />
       )}
 
-      <Modal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
+      <Drawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
         title={editing ? 'Editar usuario' : 'Nuevo usuario'}
       >
         <UsuarioForm
           initial={editing ?? undefined}
           onSubmit={handleSubmit}
-          onCancel={() => setModalOpen(false)}
+          onCancel={() => setDrawerOpen(false)}
         />
-      </Modal>
+      </Drawer>
     </div>
   );
 }

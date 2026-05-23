@@ -12,6 +12,7 @@ export const pedidoService = {
     estado?: EstadoPedido;
     startDate?: string;
     endDate?: string;
+    metodo_pago?: string;
     page?: number;
     limit?: number;
   }): Promise<{ pedidos: Pedido[]; total: number; page: number; limit: number }> => {
