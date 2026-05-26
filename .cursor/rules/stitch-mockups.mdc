@@ -1,0 +1,21 @@
+---
+description: Mockups de Google Stitch para Chamos House (proyecto 6657262445699911480)
+globs: chamos-house/frontend/**/*
+alwaysApply: false
+---
+
+# Stitch — Chamos House UI
+
+- **MCP:** configurado en `.cursor/mcp.json` → servidor `stitch` (`https://stitch.googleapis.com/mcp`).
+- **Proyecto Stitch:** `6657262445699911480` (ver también `.cursor/stitch-project.json`).
+- **Auth:** variable de entorno `STITCH_API_KEY` (nunca hardcodear en el repo).
+
+## Antes de tocar componentes React
+
+1. `list_screens` con `project_id: "6657262445699911480"`.
+2. Por cada pantalla relevante: `get_screen` (HTML + screenshot).
+3. Implementar en `chamos-house/frontend` respetando layout, colores y tipografías del mockup.
+
+## Pantallas esperadas (referencia)
+
+Login, KDS (cocina), Dashboard, Pedidos, Productos, Usuarios — tema **dark**, acento `#F5A623`.

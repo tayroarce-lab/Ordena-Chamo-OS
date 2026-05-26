@@ -1,0 +1,89 @@
+import { ArrowRight } from 'lucide-react';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { useTickingTime } from '@/hooks/useTickingTime';
+import clsx from 'clsx';
+import type { EstadoPedido, Pedido } from '@/types/pedido';
+import { TRANSICIONES_ESTADO } from '@/types/pedido';
+import { formatCurrency, formatMetodoPago, formatModificadores, formatTelefono } from '@/utils/formatters';
+
+const estadoBorder: Record<EstadoPedido, string> = {
+  pendiente: 'border-l-danger',
+  en_proceso: 'border-l-info',
+  listo: 'border-l-success',
+  entregado: 'border-l-muted',
+};
+
+interface PedidoCardProps {
+  pedido: Pedido;
+  onCambiarEstado: (pedidoId: number, nuevoEstado: EstadoPedido) => void;
+}
+
+const ACTION_LABELS: Record<EstadoPedido, string> = {
+  pendiente: '▶ Iniciar',
+  en_proceso: '✓ Listo',
+  listo: '📦 Entregar',
+  entregado: '',
+};
+
+export function PedidoCard({ pedido, onCambiarEstado }: PedidoCardProps) {
+  const elapsed = useTickingTime(pedido.f_creacion);
+  const siguienteEstado = TRANSICIONES_ESTADO[pedido.estado];
+  const isUrgent = elapsed.includes('h') || parseInt(elapsed, 10) >= 15;
+
+  return (
+    <Card
+      padding="sm"
+      className={clsx('border-l-4', estadoBorder[pedido.estado], pedido.estado === 'listo' && 'animate-pulse-slow')}
+    >
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div>
+          <span className="font-mono text-lg font-bold text-accent">#{pedido.id}</span>
+          <p className="mt-0.5 text-sm font-medium text-text-primary">
+            {pedido.usuario.nombre ?? 'Cliente'}
+          </p>
+          <p className="text-xs text-muted">{formatTelefono(pedido.usuario.telefono)}</p>
+        </div>
+        <Badge variant={isUrgent ? 'danger' : 'default'}>{elapsed}</Badge>
+      </div>
+
+      <ul className="mb-3 space-y-2">
+        {pedido.detalles.map((detalle) => {
+          const mods = formatModificadores(detalle.modificadores);
+          return (
+            <li key={detalle.id} className="text-sm">
+              <span className="font-mono font-semibold text-accent">{detalle.cantidad}x</span>{' '}
+              <span className="text-text-primary">{detalle.producto.nombre}</span>
+              {mods && <p className="ml-5 text-xs text-text-secondary italic">{mods}</p>}
+            </li>
+          );
+        })}
+      </ul>
+
+      {pedido.notas && (
+        <p className="mb-3 rounded bg-elevated px-2 py-1 text-xs text-text-secondary">
+          📝 {pedido.notas}
+        </p>
+      )}
+
+      <div className="mb-3 flex items-center justify-between text-xs text-muted">
+        <span>{formatMetodoPago(pedido.metodo_pago)}</span>
+        <span className="font-mono font-semibold text-text-primary">
+          {formatCurrency(pedido.total)}
+        </span>
+      </div>
+
+      {siguienteEstado && (
+        <Button
+          fullWidth
+          size="sm"
+          onClick={() => onCambiarEstado(pedido.id, siguienteEstado)}
+        >
+          {ACTION_LABELS[pedido.estado]}
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      )}
+    </Card>
+  );
+}
