@@ -2,7 +2,7 @@ export type RolUsuario = 'cliente' | 'cocina' | 'admin';
 
 export type EstadoPedido = 'pendiente' | 'en_proceso' | 'listo' | 'entregado';
 
-export type MetodoPago = 'efectivo' | 'tarjeta' | 'transferencia' | 'zelle';
+export type MetodoPago = 'efectivo' | 'tarjeta' | 'transferencia' | 'sinpe_movil';
 
 export type PeriodoReporte = 'dia' | 'semana' | 'mes';
 
@@ -98,7 +98,7 @@ export const METODOS_PAGO: MetodoPago[] = [
   'efectivo',
   'tarjeta',
   'transferencia',
-  'zelle',
+  'sinpe_movil',
 ];
 
 export const ROLES_USUARIO: RolUsuario[] = ['cliente', 'cocina', 'admin'];

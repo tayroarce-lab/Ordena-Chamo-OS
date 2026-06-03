@@ -24,7 +24,7 @@ const METODO_LABELS: Record<string, string> = {
   efectivo: 'Efectivo',
   tarjeta: 'Tarjeta',
   transferencia: 'Transferencia',
-  zelle: 'Zelle',
+  sinpe_movil: 'Sinpe Movil',
 };
 
 export function NuevoPedidoModal({ isOpen, onClose, onCreated }: NuevoPedidoModalProps) {

@@ -13,7 +13,7 @@ export const ESTADOS_PEDIDO: EstadoPedido[] = [
   'entregado',
 ];
 
-export const METODOS_PAGO = ['efectivo', 'tarjeta', 'transferencia', 'zelle'] as const;
+export const METODOS_PAGO = ['efectivo', 'tarjeta', 'transferencia', 'sinpe_movil'] as const;
 
 export const ROLES_STAFF: RolUsuario[] = ['cocina', 'admin'];
 

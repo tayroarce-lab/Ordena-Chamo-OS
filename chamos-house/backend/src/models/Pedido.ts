@@ -51,11 +51,11 @@ export class Pedido extends Model<
           },
         },
         metodo_pago: {
-          type: DataTypes.ENUM('efectivo', 'tarjeta', 'transferencia', 'zelle'),
+          type: DataTypes.ENUM('efectivo', 'tarjeta', 'transferencia', 'sinpe_movil'),
           allowNull: false,
           validate: {
             isIn: {
-              args: [['efectivo', 'tarjeta', 'transferencia', 'zelle']],
+              args: [['efectivo', 'tarjeta', 'transferencia', 'sinpe_movil']],
               msg: 'Método de pago inválido',
             },
           },

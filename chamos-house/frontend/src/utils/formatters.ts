@@ -43,7 +43,7 @@ export function formatMetodoPago(metodo: MetodoPago): string {
     efectivo: 'Efectivo',
     tarjeta: 'Tarjeta',
     transferencia: 'Transferencia',
-    zelle: 'Zelle',
+    sinpe_movil: 'Sinpe Movil',
   };
   return labels[metodo];
 }

@@ -3,7 +3,7 @@ import type { Producto } from './producto';
 
 export type EstadoPedido = 'pendiente' | 'en_proceso' | 'listo' | 'entregado';
 
-export type MetodoPago = 'efectivo' | 'tarjeta' | 'transferencia' | 'zelle';
+export type MetodoPago = 'efectivo' | 'tarjeta' | 'transferencia' | 'sinpe_movil';
 
 export interface DetallePedido {
   id: number;
