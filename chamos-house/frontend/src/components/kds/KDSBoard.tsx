@@ -1,4 +1,5 @@
-import { RefreshCw, PanelLeft, PanelLeftClose } from 'lucide-react';
+import { useState } from 'react';
+import { RefreshCw, PanelLeft, PanelLeftClose, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ConnectionStatus } from '@/components/layout/ConnectionStatus';
@@ -6,10 +7,12 @@ import { KDSColumn } from './KDSColumn';
 import { useKitchenSocket } from '@/hooks/useKitchenSocket';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { useUIStore } from '@/store/uiStore';
+import { NuevoPedidoModal } from '@/components/pedidos/NuevoPedidoModal';
 
 export function KDSBoard() {
   const { pedidos, isConnected, isLoading, actualizarEstado, refresh } = useKitchenSocket();
   const { sidebarOpen, toggleSidebar } = useUIStore();
+  const [isNuevoPedidoOpen, setIsNuevoPedidoOpen] = useState(false);
 
   const totalActivos =
     pedidos.pendiente.length +
@@ -45,6 +48,15 @@ export function KDSBoard() {
             </div>
           </div>
         <div className="flex items-center gap-3">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsNuevoPedidoOpen(true)}
+            className="hidden sm:flex"
+          >
+            <Plus className="h-4 w-4" />
+            Nuevo Pedido
+          </Button>
           <ConnectionStatus isConnected={isConnected} />
           <Button variant="outline" size="sm" onClick={() => void refresh()}>
             <RefreshCw className="h-4 w-4" />
@@ -88,6 +100,15 @@ export function KDSBoard() {
         </div>
       )}
       </div>
+
+      <NuevoPedidoModal
+        isOpen={isNuevoPedidoOpen}
+        onClose={() => setIsNuevoPedidoOpen(false)}
+        onCreated={() => {
+          setIsNuevoPedidoOpen(false);
+          void refresh();
+        }}
+      />
     </div>
   );
 }
