@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { forwardRef } from 'react';
 import type { HTMLAttributes, ReactNode } from 'react';
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
@@ -14,21 +15,24 @@ const paddingClasses = {
   lg: 'p-8',
 };
 
-export function Card({ children, padding = 'md', hover = false, className, ...props }: CardProps) {
-  return (
-    <div
-      className={clsx(
-        'rounded-xl border border-border-subtle bg-surface shadow-card',
-        paddingClasses[padding],
-        hover && 'transition-shadow duration-200 hover:shadow-glow',
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </div>
-  );
-}
+export const Card = forwardRef<HTMLDivElement, CardProps>(
+  ({ children, padding = 'md', hover = false, className, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={clsx(
+          'rounded-xl border border-border-subtle bg-surface shadow-card',
+          paddingClasses[padding],
+          hover && 'transition-shadow duration-200 hover:shadow-glow',
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  }
+);
 
 interface CardHeaderProps {
   title: string;

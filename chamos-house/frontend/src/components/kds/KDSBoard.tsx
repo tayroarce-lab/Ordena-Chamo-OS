@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { DragDropContext, type DropResult } from '@hello-pangea/dnd';
 import { RefreshCw, PanelLeft, PanelLeftClose, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -8,11 +9,26 @@ import { useKitchenSocket } from '@/hooks/useKitchenSocket';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { useUIStore } from '@/store/uiStore';
 import { NuevoPedidoModal } from '@/components/pedidos/NuevoPedidoModal';
+import type { EstadoPedido } from '@/types/pedido';
 
 export function KDSBoard() {
   const { pedidos, isConnected, isLoading, actualizarEstado, refresh } = useKitchenSocket();
   const { sidebarOpen, toggleSidebar } = useUIStore();
   const [isNuevoPedidoOpen, setIsNuevoPedidoOpen] = useState(false);
+
+  const handleDragEnd = useCallback(
+    (result: DropResult) => {
+      const { source, destination, draggableId } = result;
+      if (!destination) return;
+      if (source.droppableId === destination.droppableId) return;
+
+      const pedidoId = parseInt(draggableId, 10);
+      const nuevoEstado = destination.droppableId as EstadoPedido;
+      
+      void actualizarEstado(pedidoId, nuevoEstado);
+    },
+    [actualizarEstado]
+  );
 
   const totalActivos =
     pedidos.pendiente.length +
@@ -72,32 +88,34 @@ export function KDSBoard() {
           ))}
         </div>
       ) : (
-        <div className="grid min-h-0 flex-1 grid-cols-4 gap-4 p-4">
-          <KDSColumn
-            titulo="Pendientes"
-            estado="pendiente"
-            pedidos={pedidos.pendiente}
-            onCambiarEstado={actualizarEstado}
-          />
-          <KDSColumn
-            titulo="En proceso"
-            estado="en_proceso"
-            pedidos={pedidos.en_proceso}
-            onCambiarEstado={actualizarEstado}
-          />
-          <KDSColumn
-            titulo="Listos"
-            estado="listo"
-            pedidos={pedidos.listo}
-            onCambiarEstado={actualizarEstado}
-          />
-          <KDSColumn
-            titulo="Entregados"
-            estado="entregado"
-            pedidos={pedidos.entregado}
-            onCambiarEstado={actualizarEstado}
-          />
-        </div>
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="grid min-h-0 flex-1 grid-cols-4 gap-4 p-4">
+            <KDSColumn
+              titulo="Pendientes"
+              estado="pendiente"
+              pedidos={pedidos.pendiente}
+              onCambiarEstado={actualizarEstado}
+            />
+            <KDSColumn
+              titulo="En proceso"
+              estado="en_proceso"
+              pedidos={pedidos.en_proceso}
+              onCambiarEstado={actualizarEstado}
+            />
+            <KDSColumn
+              titulo="Listos"
+              estado="listo"
+              pedidos={pedidos.listo}
+              onCambiarEstado={actualizarEstado}
+            />
+            <KDSColumn
+              titulo="Entregados"
+              estado="entregado"
+              pedidos={pedidos.entregado}
+              onCambiarEstado={actualizarEstado}
+            />
+          </div>
+        </DragDropContext>
       )}
       </div>
 

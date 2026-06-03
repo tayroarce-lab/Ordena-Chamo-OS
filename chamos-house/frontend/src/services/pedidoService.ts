@@ -37,7 +37,7 @@ export const pedidoService = {
   create: async (input: {
     telefono: string;
     nombre_cliente?: string;
-    metodo_pago: 'efectivo' | 'tarjeta' | 'transferencia' | 'zelle' | string;
+    metodo_pago: 'efectivo' | 'tarjeta' | 'transferencia' | 'sinpe' | string;
     notas?: string;
     items: Array<{
       producto_id: number;

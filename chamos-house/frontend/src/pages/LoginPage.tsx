@@ -24,8 +24,8 @@ export function LoginPage() {
       <div className="relative hidden overflow-hidden bg-surface lg:flex lg:flex-col lg:justify-between lg:p-12">
         <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-transparent to-transparent" />
         <div className="relative z-10">
-          <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent font-heading text-2xl font-bold text-primary">
-            CH
+          <div className="mb-8">
+            <img src="/logo.png" alt="Chamos House" className="h-20 w-20 rounded-full object-cover" />
           </div>
           <h1 className="font-heading text-4xl font-bold leading-tight text-text-primary">
             Chamos House
@@ -53,8 +53,8 @@ export function LoginPage() {
       <div className="flex flex-col justify-center px-8 py-12 sm:px-16">
         <div className="mx-auto w-full max-w-md">
           <div className="mb-8 lg:hidden">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-accent font-heading text-xl font-bold text-primary">
-              CH
+            <div className="mb-4">
+              <img src="/logo.png" alt="Chamos House" className="h-14 w-14 rounded-full object-cover" />
             </div>
             <h1 className="font-heading text-2xl font-bold">Iniciar sesión</h1>
           </div>

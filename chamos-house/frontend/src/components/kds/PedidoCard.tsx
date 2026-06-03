@@ -1,4 +1,5 @@
-import { ArrowRight } from 'lucide-react';
+import { Draggable } from '@hello-pangea/dnd';
+import { ArrowRight, GripVertical } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -17,6 +18,7 @@ const estadoBorder: Record<EstadoPedido, string> = {
 
 interface PedidoCardProps {
   pedido: Pedido;
+  index: number;
   onCambiarEstado: (pedidoId: number, nuevoEstado: EstadoPedido) => void;
 }
 
@@ -27,63 +29,86 @@ const ACTION_LABELS: Record<EstadoPedido, string> = {
   entregado: '',
 };
 
-export function PedidoCard({ pedido, onCambiarEstado }: PedidoCardProps) {
+export function PedidoCard({ pedido, index, onCambiarEstado }: PedidoCardProps) {
   const elapsed = useTickingTime(pedido.f_creacion);
   const siguienteEstado = TRANSICIONES_ESTADO[pedido.estado];
   const isUrgent = elapsed.includes('h') || parseInt(elapsed, 10) >= 15;
 
   return (
-    <Card
-      padding="sm"
-      className={clsx('border-l-4', estadoBorder[pedido.estado], pedido.estado === 'listo' && 'animate-pulse-slow')}
-    >
-      <div className="mb-3 flex items-start justify-between gap-2">
-        <div>
-          <span className="font-mono text-lg font-bold text-accent">#{pedido.id}</span>
-          <p className="mt-0.5 text-sm font-medium text-text-primary">
-            {pedido.usuario.nombre ?? 'Cliente'}
-          </p>
-          <p className="text-xs text-muted">{formatTelefono(pedido.usuario.telefono)}</p>
-        </div>
-        <Badge variant={isUrgent ? 'danger' : 'default'}>{elapsed}</Badge>
-      </div>
-
-      <ul className="mb-3 space-y-2">
-        {pedido.detalles.map((detalle) => {
-          const mods = formatModificadores(detalle.modificadores);
-          return (
-            <li key={detalle.id} className="text-sm">
-              <span className="font-mono font-semibold text-accent">{detalle.cantidad}x</span>{' '}
-              <span className="text-text-primary">{detalle.producto.nombre}</span>
-              {mods && <p className="ml-5 text-xs text-text-secondary italic">{mods}</p>}
-            </li>
-          );
-        })}
-      </ul>
-
-      {pedido.notas && (
-        <p className="mb-3 rounded bg-elevated px-2 py-1 text-xs text-text-secondary">
-          📝 {pedido.notas}
-        </p>
-      )}
-
-      <div className="mb-3 flex items-center justify-between text-xs text-muted">
-        <span>{formatMetodoPago(pedido.metodo_pago)}</span>
-        <span className="font-mono font-semibold text-text-primary">
-          {formatCurrency(pedido.total)}
-        </span>
-      </div>
-
-      {siguienteEstado && (
-        <Button
-          fullWidth
-          size="sm"
-          onClick={() => onCambiarEstado(pedido.id, siguienteEstado)}
+    <Draggable draggableId={pedido.id.toString()} index={index}>
+      {(provided, snapshot) => (
+        <Card
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          style={{
+            ...provided.draggableProps.style,
+            ...(snapshot.isDragging ? { zIndex: 50 } : {})
+          }}
+          padding="sm"
+          className={clsx(
+            'border-l-4 relative',
+            estadoBorder[pedido.estado],
+            pedido.estado === 'listo' && 'animate-pulse-slow',
+            snapshot.isDragging && 'shadow-glow ring-2 ring-accent opacity-90'
+          )}
         >
-          {ACTION_LABELS[pedido.estado]}
-          <ArrowRight className="h-4 w-4" />
-        </Button>
+          <div className="mb-3 flex items-start justify-between gap-2">
+            <div className="flex items-start gap-2">
+              <div
+                {...provided.dragHandleProps}
+                className="mt-1 cursor-grab active:cursor-grabbing text-text-secondary hover:text-text-primary"
+              >
+                <GripVertical className="h-4 w-4" />
+              </div>
+              <div>
+                <span className="font-mono text-lg font-bold text-accent">#{pedido.id}</span>
+                <p className="mt-0.5 text-sm font-medium text-text-primary">
+                  {pedido.usuario.nombre ?? 'Cliente'}
+                </p>
+                <p className="text-xs text-muted">{formatTelefono(pedido.usuario.telefono)}</p>
+              </div>
+            </div>
+            <Badge variant={isUrgent ? 'danger' : 'default'}>{elapsed}</Badge>
+          </div>
+
+          <ul className="mb-3 space-y-2">
+            {pedido.detalles.map((detalle) => {
+              const mods = formatModificadores(detalle.modificadores);
+              return (
+                <li key={detalle.id} className="text-sm">
+                  <span className="font-mono font-semibold text-accent">{detalle.cantidad}x</span>{' '}
+                  <span className="text-text-primary">{detalle.producto.nombre}</span>
+                  {mods && <p className="ml-5 text-xs text-text-secondary italic">{mods}</p>}
+                </li>
+              );
+            })}
+          </ul>
+
+          {pedido.notas && (
+            <p className="mb-3 rounded bg-elevated px-2 py-1 text-xs text-text-secondary">
+              📝 {pedido.notas}
+            </p>
+          )}
+
+          <div className="mb-3 flex items-center justify-between text-xs text-muted">
+            <span>{formatMetodoPago(pedido.metodo_pago)}</span>
+            <span className="font-mono font-semibold text-text-primary">
+              {formatCurrency(pedido.total)}
+            </span>
+          </div>
+
+          {siguienteEstado && (
+            <Button
+              fullWidth
+              size="sm"
+              onClick={() => onCambiarEstado(pedido.id, siguienteEstado)}
+            >
+              {ACTION_LABELS[pedido.estado]}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          )}
+        </Card>
       )}
-    </Card>
+    </Draggable>
   );
 }

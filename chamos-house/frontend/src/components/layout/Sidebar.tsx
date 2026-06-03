@@ -42,8 +42,8 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
     >
       <div className={clsx('border-b border-border-subtle p-4', collapsed && 'px-2')}>
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent font-heading text-lg font-bold text-primary">
-            CH
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full overflow-hidden">
+            <img src="/logo.png" alt="Chamos House" className="h-full w-full object-cover" />
           </div>
           {!collapsed && (
             <div>

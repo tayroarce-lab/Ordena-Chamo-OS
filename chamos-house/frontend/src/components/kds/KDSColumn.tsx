@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { Droppable } from '@hello-pangea/dnd';
 import { PedidoCard } from './PedidoCard';
 import type { EstadoPedido, Pedido } from '@/types/pedido';
 import { ESTADO_LABELS } from '@/types/pedido';
@@ -34,17 +35,29 @@ export function KDSColumn({ titulo, estado, pedidos, onCambiarEstado }: KDSColum
           {pedidos.length}
         </span>
       </div>
-      <div className="flex-1 space-y-3 overflow-y-auto p-3 scrollbar-thin">
-        {pedidos.length === 0 ? (
-          <p className="py-8 text-center text-xs text-muted">
-            Sin pedidos {ESTADO_LABELS[estado].toLowerCase()}
-          </p>
-        ) : (
-          pedidos.map((pedido) => (
-            <PedidoCard key={pedido.id} pedido={pedido} onCambiarEstado={onCambiarEstado} />
-          ))
+      <Droppable droppableId={estado}>
+        {(provided, snapshot) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className={clsx(
+              "flex-1 space-y-3 overflow-y-auto p-3 scrollbar-thin transition-colors",
+              snapshot.isDraggingOver && "bg-accent/5"
+            )}
+          >
+            {pedidos.length === 0 ? (
+              <p className="py-8 text-center text-xs text-muted">
+                Sin pedidos {ESTADO_LABELS[estado].toLowerCase()}
+              </p>
+            ) : (
+              pedidos.map((pedido, index) => (
+                <PedidoCard key={pedido.id} pedido={pedido} index={index} onCambiarEstado={onCambiarEstado} />
+              ))
+            )}
+            {provided.placeholder}
+          </div>
         )}
-      </div>
+      </Droppable>
     </div>
   );
 }

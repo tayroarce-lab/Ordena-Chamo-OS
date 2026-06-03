@@ -114,10 +114,14 @@ export function NuevoPedidoModal({ isOpen, onClose, onCreated }: NuevoPedidoModa
     e.preventDefault();
     setError(null);
 
-    if (!telefono.trim() || telefono.trim().length < 7) {
-      setError('El teléfono debe tener al menos 7 dígitos');
+    let finalTelefono = telefono.trim();
+    if (!finalTelefono) {
+      finalTelefono = '00000000'; // Default phone for walk-in orders
+    } else if (finalTelefono.length < 7) {
+      setError('El teléfono debe tener al menos 7 dígitos si se proporciona');
       return;
     }
+
     if (items.length === 0) {
       setError('Agrega al menos un producto al pedido');
       return;
@@ -126,7 +130,7 @@ export function NuevoPedidoModal({ isOpen, onClose, onCreated }: NuevoPedidoModa
     setIsSubmitting(true);
     try {
       const pedido = await pedidoService.create({
-        telefono: telefono.trim(),
+        telefono: finalTelefono,
         nombre_cliente: nombreCliente.trim() || undefined,
         metodo_pago: metodoPago,
         notas: notas.trim() || undefined,
@@ -177,12 +181,11 @@ export function NuevoPedidoModal({ isOpen, onClose, onCreated }: NuevoPedidoModa
         {/* Datos del cliente */}
         <div className="grid grid-cols-2 gap-4">
           <Input
-            label="Teléfono *"
+            label="Teléfono"
             type="tel"
             value={telefono}
             onChange={(e) => setTelefono(e.target.value)}
-            placeholder="Ej: 88887777"
-            required
+            placeholder="Ej: 88887777 (Opcional)"
           />
           <Input
             label="Nombre del cliente"
