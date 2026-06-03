@@ -80,10 +80,10 @@ export interface PedidoCanceladoSocket {
   pedido_id: number;
 }
 
-export const TRANSICIONES_VALIDAS: Record<EstadoPedido, EstadoPedido | null> = {
-  pendiente: 'en_proceso',
-  en_proceso: 'listo',
-  listo: 'entregado',
+export const TRANSICIONES_VALIDAS: Record<EstadoPedido, EstadoPedido[] | null> = {
+  pendiente: ['en_proceso'],
+  en_proceso: ['pendiente', 'listo'],
+  listo: ['en_proceso', 'entregado'],
   entregado: null,
 };
 

@@ -1,5 +1,5 @@
 import { Draggable } from '@hello-pangea/dnd';
-import { ArrowRight, GripVertical } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -23,9 +23,23 @@ interface PedidoCardProps {
 }
 
 const ACTION_LABELS: Record<EstadoPedido, string> = {
-  pendiente: '▶ Iniciar',
-  en_proceso: '✓ Listo',
-  listo: '📦 Entregar',
+  pendiente: 'Iniciar',
+  en_proceso: 'Listo',
+  listo: 'Entregar',
+  entregado: '',
+};
+
+const PREV_ESTADO: Record<EstadoPedido, EstadoPedido | null> = {
+  pendiente: null,
+  en_proceso: 'pendiente',
+  listo: 'en_proceso',
+  entregado: null,
+};
+
+const PREV_LABELS: Record<EstadoPedido, string> = {
+  pendiente: '',
+  en_proceso: 'Pendiente',
+  listo: 'En proceso',
   entregado: '',
 };
 
@@ -45,28 +59,21 @@ export function PedidoCard({ pedido, index, onCambiarEstado }: PedidoCardProps) 
             ...(snapshot.isDragging ? { zIndex: 50 } : {})
           }}
           padding="sm"
+          {...provided.dragHandleProps}
           className={clsx(
-            'border-l-4 relative',
+            'border-l-4 relative cursor-grab active:cursor-grabbing',
             estadoBorder[pedido.estado],
             pedido.estado === 'listo' && 'animate-pulse-slow',
             snapshot.isDragging && 'shadow-glow ring-2 ring-accent opacity-90'
           )}
         >
           <div className="mb-3 flex items-start justify-between gap-2">
-            <div className="flex items-start gap-2">
-              <div
-                {...provided.dragHandleProps}
-                className="mt-1 cursor-grab active:cursor-grabbing text-text-secondary hover:text-text-primary"
-              >
-                <GripVertical className="h-4 w-4" />
-              </div>
-              <div>
-                <span className="font-mono text-lg font-bold text-accent">#{pedido.id}</span>
-                <p className="mt-0.5 text-sm font-medium text-text-primary">
-                  {pedido.usuario.nombre ?? 'Cliente'}
-                </p>
-                <p className="text-xs text-muted">{formatTelefono(pedido.usuario.telefono)}</p>
-              </div>
+            <div>
+              <span className="font-mono text-lg font-bold text-accent">#{pedido.id}</span>
+              <p className="mt-0.5 text-sm font-medium text-text-primary">
+                {pedido.usuario.nombre ?? 'Cliente'}
+              </p>
+              <p className="text-xs text-muted">{formatTelefono(pedido.usuario.telefono)}</p>
             </div>
             <Badge variant={isUrgent ? 'danger' : 'default'}>{elapsed}</Badge>
           </div>
@@ -97,15 +104,30 @@ export function PedidoCard({ pedido, index, onCambiarEstado }: PedidoCardProps) 
             </span>
           </div>
 
-          {siguienteEstado && (
-            <Button
-              fullWidth
-              size="sm"
-              onClick={() => onCambiarEstado(pedido.id, siguienteEstado)}
-            >
-              {ACTION_LABELS[pedido.estado]}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
+          {(siguienteEstado || PREV_ESTADO[pedido.estado]) && (
+            <div className={clsx('flex gap-2', siguienteEstado && PREV_ESTADO[pedido.estado] && 'grid grid-cols-2')}>
+              {PREV_ESTADO[pedido.estado] && (
+                <Button
+                  fullWidth
+                  size="sm"
+                  variant="outline"
+                  onClick={(e) => { e.stopPropagation(); onCambiarEstado(pedido.id, PREV_ESTADO[pedido.estado]!); }}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  {PREV_LABELS[pedido.estado]}
+                </Button>
+              )}
+              {siguienteEstado && (
+                <Button
+                  fullWidth
+                  size="sm"
+                  onClick={(e) => { e.stopPropagation(); onCambiarEstado(pedido.id, siguienteEstado); }}
+                >
+                  {ACTION_LABELS[pedido.estado]}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           )}
         </Card>
       )}

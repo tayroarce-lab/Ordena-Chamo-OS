@@ -168,9 +168,9 @@ export class PedidoService {
     }
 
     const estadoAnterior: EstadoPedido = pedido.estado ?? 'pendiente';
-    const siguientePermitido = TRANSICIONES_VALIDAS[estadoAnterior];
+    const transicionesPermitidas = TRANSICIONES_VALIDAS[estadoAnterior];
 
-    if (siguientePermitido !== nuevoEstado) {
+    if (!transicionesPermitidas || !transicionesPermitidas.includes(nuevoEstado)) {
       throw new AppError(
         `Transición no permitida de '${estadoAnterior}' a '${nuevoEstado}'`,
         400
