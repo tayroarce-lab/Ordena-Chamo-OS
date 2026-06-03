@@ -88,7 +88,6 @@ export function UsuariosPage() {
     { id: 'todos', label: `Todos (${contadores.todos})` },
     { id: 'admin', label: `Admin (${contadores.admin})` },
     { id: 'cocina', label: `Cocina (${contadores.cocina})` },
-    { id: 'cliente', label: `Clientes (${contadores.cliente})` },
   ];
 
   return (

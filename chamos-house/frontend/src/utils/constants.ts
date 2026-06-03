@@ -19,10 +19,13 @@ export const ROLES_STAFF: RolUsuario[] = ['cocina', 'admin'];
 
 export const CATEGORIAS_PRODUCTO = [
   'hamburguesas',
+  'perros',
+  'papas',
   'bebidas',
   'combos',
   'acompañamientos',
   'postres',
+  'otros',
 ] as const;
 
 export const NAV_ITEMS = [
