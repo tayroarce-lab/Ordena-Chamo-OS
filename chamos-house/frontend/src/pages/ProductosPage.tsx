@@ -7,6 +7,7 @@ import { ProductoForm } from '@/components/productos/ProductoForm';
 import { Button } from '@/components/ui/Button';
 import { Drawer } from '@/components/ui/Drawer';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { productoService } from '@/services/productoService';
 import type { Producto, ProductoCreateInput } from '@/types/producto';
@@ -21,6 +22,7 @@ export function ProductosPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<Producto | null>(null);
+  const [productoToDelete, setProductoToDelete] = useState<Producto | null>(null);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -60,9 +62,14 @@ export function ProductosPage() {
     setDrawerOpen(true);
   };
 
-  const handleDelete = async (producto: Producto) => {
-    if (!window.confirm(`¿Eliminar "${producto.nombre}"?`)) return;
-    await productoService.delete(producto.id);
+  const handleDelete = (producto: Producto) => {
+    setProductoToDelete(producto);
+  };
+
+  const confirmDelete = async () => {
+    if (!productoToDelete) return;
+    await productoService.delete(productoToDelete.id);
+    setProductoToDelete(null);
     await load();
   };
 
@@ -202,6 +209,16 @@ export function ProductosPage() {
           onCancel={() => setDrawerOpen(false)}
         />
       </Drawer>
+
+      <ConfirmDialog
+        isOpen={!!productoToDelete}
+        onClose={() => setProductoToDelete(null)}
+        title="Eliminar producto"
+        description={`¿Estás seguro de que deseas eliminar "${productoToDelete?.nombre}"? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        onConfirm={() => void confirmDelete()}
+        isDestructive
+      />
     </div>
   );
 }

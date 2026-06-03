@@ -7,6 +7,7 @@ import { UsuarioForm } from '@/components/usuarios/UsuarioForm';
 import { Button } from '@/components/ui/Button';
 import { Drawer } from '@/components/ui/Drawer';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Input } from '@/components/ui/Input';
 import { SkeletonTable } from '@/components/ui/Skeleton';
 import { usuarioService } from '@/services/usuarioService';
@@ -21,6 +22,7 @@ export function UsuariosPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<Usuario | null>(null);
+  const [usuarioToToggle, setUsuarioToToggle] = useState<Usuario | null>(null);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -61,10 +63,14 @@ export function UsuariosPage() {
     setDrawerOpen(true);
   };
 
-  const handleToggleActivo = async (usuario: Usuario) => {
-    const accion = usuario.activo ? 'desactivar' : 'activar';
-    if (!window.confirm(`¿${accion} usuario ${usuario.telefono}?`)) return;
-    await usuarioService.toggleActivo(usuario.id);
+  const handleToggleActivo = (usuario: Usuario) => {
+    setUsuarioToToggle(usuario);
+  };
+
+  const confirmToggleActivo = async () => {
+    if (!usuarioToToggle) return;
+    await usuarioService.toggleActivo(usuarioToToggle.id);
+    setUsuarioToToggle(null);
     await load();
   };
 
@@ -148,6 +154,18 @@ export function UsuariosPage() {
           onCancel={() => setDrawerOpen(false)}
         />
       </Drawer>
+
+      <ConfirmDialog
+        isOpen={!!usuarioToToggle}
+        onClose={() => setUsuarioToToggle(null)}
+        title={usuarioToToggle?.activo ? 'Desactivar usuario' : 'Activar usuario'}
+        description={`¿Estás seguro de que deseas ${
+          usuarioToToggle?.activo ? 'desactivar' : 'activar'
+        } al usuario ${usuarioToToggle?.telefono}?`}
+        confirmText={usuarioToToggle?.activo ? 'Desactivar' : 'Activar'}
+        onConfirm={() => void confirmToggleActivo()}
+        isDestructive={usuarioToToggle?.activo}
+      />
     </div>
   );
 }
