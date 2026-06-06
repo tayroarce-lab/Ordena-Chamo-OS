@@ -28,6 +28,7 @@ export const CATEGORIAS_PRODUCTO = [
 
 export const NAV_ITEMS = [
   { path: '/dashboard', label: 'Dashboard', icon: 'LayoutDashboard', roles: ['admin'] as RolUsuario[] },
+  { path: '/analytics', label: 'Análisis', icon: 'BarChart3', roles: ['admin'] as RolUsuario[] },
   { path: '/cocina', label: 'Cocina', icon: 'ChefHat', roles: ['admin', 'cocina'] as RolUsuario[] },
   { path: '/pedidos', label: 'Pedidos', icon: 'ClipboardList', roles: ['admin'] as RolUsuario[] },
   { path: '/productos', label: 'Productos', icon: 'Package', roles: ['admin'] as RolUsuario[] },

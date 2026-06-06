@@ -8,6 +8,7 @@ import { LoginPage } from '@/pages/LoginPage';
 import { PedidosPage } from '@/pages/PedidosPage';
 import { ProductosPage } from '@/pages/ProductosPage';
 import { UsuariosPage } from '@/pages/UsuariosPage';
+import { AnalyticsPage } from '@/pages/AnalyticsPage';
 import { useAuthStore } from '@/store/authStore';
 
 function RootRedirect() {
@@ -33,6 +34,7 @@ export function App() {
       <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/pedidos" element={<PedidosPage />} />
           <Route path="/productos" element={<ProductosPage />} />
           <Route path="/usuarios" element={<UsuariosPage />} />

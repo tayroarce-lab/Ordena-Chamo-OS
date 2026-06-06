@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import {
+  BarChart3,
   ChefHat,
   ClipboardList,
   LayoutDashboard,
@@ -15,6 +16,7 @@ import { useUIStore } from '@/store/uiStore';
 
 const iconMap = {
   LayoutDashboard,
+  BarChart3,
   ChefHat,
   ClipboardList,
   Package,
