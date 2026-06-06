@@ -19,10 +19,13 @@ export function createApp(): express.Application {
     })
   );
 
+  // Configurar CORS más flexible en desarrollo
+  const corsOrigin = isDevelopment ? '*' : env.frontendUrl;
+  
   app.use(
     cors({
-      origin: env.frontendUrl,
-      credentials: true,
+      origin: corsOrigin,
+      credentials: !isDevelopment,
     })
   );
 
