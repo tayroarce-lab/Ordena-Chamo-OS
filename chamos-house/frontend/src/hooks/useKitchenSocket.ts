@@ -56,13 +56,36 @@ export function useKitchenSocket() {
 
   const initPedidos = useCallback(async () => {
     setLoading(true);
-    try {
-      const activos = await pedidoService.getActivos();
-      hydrateFromList(activos);
-    } catch (error) {
-      console.error('[KDS] Error cargando pedidos:', error);
-      setLoading(false);
-    }
+    const maxRetries = 3;
+    let retryCount = 0;
+
+    const attemptLoad = async (): Promise<void> => {
+      try {
+        const activos = await pedidoService.getActivos();
+        hydrateFromList(activos);
+        setLoading(false);
+      } catch (error) {
+        retryCount += 1;
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        console.error(
+          `[KDS] Error cargando pedidos (intento ${retryCount}/${maxRetries}):`,
+          errorMsg
+        );
+
+        if (retryCount < maxRetries) {
+          const delayMs = Math.min(1000 * Math.pow(2, retryCount - 1), 8000);
+          console.info(`[KDS] Reintentando en ${delayMs}ms...`);
+          setTimeout(() => {
+            void attemptLoad();
+          }, delayMs);
+        } else {
+          console.error('[KDS] Falló después de', maxRetries, 'intentos');
+          setLoading(false);
+        }
+      }
+    };
+
+    await attemptLoad();
   }, [hydrateFromList, setLoading]);
 
   useEffect(() => {

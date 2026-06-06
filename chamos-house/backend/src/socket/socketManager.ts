@@ -13,7 +13,12 @@ class SocketManager {
         origin: env.frontendUrl,
         methods: ['GET', 'POST', 'PATCH'],
         credentials: true,
+        allowEIO3: true,
       },
+      transports: ['websocket', 'polling'],
+      pingInterval: 25000,
+      pingTimeout: 60000,
+      maxHttpBufferSize: 1e6,
     });
 
     registerCocinaNamespace(this.io);
