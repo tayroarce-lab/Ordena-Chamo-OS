@@ -9,7 +9,7 @@ export class ProductoController {
     return success(res, productos);
   }
 
-  static async listarPublico(_req: Request, res: Response): Promise<Response> {
+  static async listarPublico(req: Request, res: Response): Promise<Response> {
     const productos = await ProductoService.getAll(false);
     return success(res, productos);
   }

@@ -3,7 +3,6 @@ import { AuthService } from '../../services/authService';
 import { logger } from '../../utils/logger';
 import type {
   PedidoActualizadoSocket,
-  PedidoCanceladoSocket,
   PedidoCompletoSocket,
 } from '../../types';
 
@@ -82,9 +81,4 @@ export function emitPedidoActualizado(
     updated_at: new Date().toISOString(),
   };
   getCocinaNs().emit('pedido_actualizado', payload);
-}
-
-export function emitPedidoCancelado(pedidoId: number): void {
-  const payload: PedidoCanceladoSocket = { pedido_id: pedidoId };
-  getCocinaNs().emit('pedido_cancelado', payload);
 }

@@ -76,10 +76,6 @@ export interface PedidoActualizadoSocket {
   updated_at: string;
 }
 
-export interface PedidoCanceladoSocket {
-  pedido_id: number;
-}
-
 export const TRANSICIONES_VALIDAS: Record<EstadoPedido, EstadoPedido[] | null> = {
   pendiente: ['en_proceso'],
   en_proceso: ['pendiente', 'listo'],

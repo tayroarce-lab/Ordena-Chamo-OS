@@ -27,7 +27,7 @@ export class PedidoController {
     return paginated(res, rows, count, page, limit);
   }
 
-  static async getActivos(_req: Request, res: Response): Promise<Response> {
+  static async getActivos(req: Request, res: Response): Promise<Response> {
     const pedidos = await PedidoService.getPedidosActivos();
     return success(res, pedidos);
   }

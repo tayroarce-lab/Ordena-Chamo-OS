@@ -21,7 +21,11 @@ async function bootstrap(): Promise<void> {
       logger.info(`Servidor Chamos House API en http://localhost:${env.port}`);
     });
   } catch (err) {
-    logger.error('Error crítico durante el inicio', { err });
+    logger.error('Error crítico durante el inicio', {
+      err,
+      stack: err instanceof Error ? err.stack : undefined,
+    });
+    console.error(err);
     process.exit(1);
   }
 }

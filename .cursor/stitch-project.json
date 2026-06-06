@@ -1,6 +1,0 @@
-{
-  "projectId": "6657262445699911480",
-  "name": "Chamos House",
-  "mcpServer": "stitch",
-  "notes": "Usar list_screens y get_screen con project_id antes de cambios de UI en chamos-house/frontend"
-}

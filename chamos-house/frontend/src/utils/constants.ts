@@ -15,8 +15,6 @@ export const ESTADOS_PEDIDO: EstadoPedido[] = [
 
 export const METODOS_PAGO = ['efectivo', 'tarjeta', 'transferencia', 'sinpe_movil'] as const;
 
-export const ROLES_STAFF: RolUsuario[] = ['cocina', 'admin'];
-
 export const CATEGORIAS_PRODUCTO = [
   'hamburguesas',
   'perros',
