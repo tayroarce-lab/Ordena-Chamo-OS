@@ -10,10 +10,6 @@ interface WeeklyViewProps {
   weekNumber: number;
 }
 
-const DAY_INDEX_MAP: Record<string, number> = {
-  'DOM': 0, 'LUN': 1, 'MAR': 2, 'MIE': 3, 'JUE': 4, 'VIE': 5, 'SAB': 6,
-};
-
 export function WeeklyView({ data, onDayClick, onGoToMonthly, weekNumber }: WeeklyViewProps) {
   const maxUnits = Math.max(...data.unitsPerProduct.map(p => p.units), 1);
   const chartData = data.dailyChart.map((day, idx) => ({

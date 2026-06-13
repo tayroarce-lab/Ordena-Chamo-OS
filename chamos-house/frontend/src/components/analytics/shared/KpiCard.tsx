@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 interface KpiCardProps {
   title: string;
   value: string | number;
-  badge?: { text: string; color: 'positive' | 'neutral' | 'warning' };
+  badge?: { text: string; color: 'positive' | 'neutral' | 'warning' | 'negative' };
   icon?: React.ReactNode;
   footer?: React.ReactNode;
 }
@@ -39,7 +39,7 @@ export function KpiCard({ title, value, badge, icon, footer }: KpiCardProps) {
             <div className={`mt-2 inline-block px-2 py-1 rounded text-xs font-semibold ${
               badge.color === 'positive'
                 ? 'text-accent-gold bg-yellow-900/20 border border-accent-gold/30'
-                : badge.color === 'warning'
+                : (badge.color === 'warning' || badge.color === 'negative')
                   ? 'text-red-400 bg-red-900/20 border border-red-400/30'
                   : 'text-gray-400 bg-gray-900/20 border border-gray-400/30'
             }`}>
