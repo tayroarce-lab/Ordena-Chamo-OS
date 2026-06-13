@@ -31,4 +31,11 @@ router.get(
   asyncHandler(AnalyticsController.getDaily)
 );
 
+router.get(
+  '/calendar-summary',
+  verifyToken,
+  requireRole('admin'),
+  asyncHandler(AnalyticsController.getCalendarSummary)
+);
+
 export default router;

@@ -51,4 +51,20 @@ export class AnalyticsController {
     const data = await AnalyticsService.getDailyAnalytics(date);
     return success(res, data);
   }
+
+  /**
+   * GET /api/analytics/calendar-summary
+   * Query params: month (YYYY-MM)
+   */
+  static async getCalendarSummary(req: Request, res: Response): Promise<Response> {
+    const monthStr = req.query.month as string;
+
+    if (!monthStr || !/^\d{4}-\d{2}$/.test(monthStr)) {
+      throw new AppError('Query param "month" (YYYY-MM) es obligatorio', 400);
+    }
+
+    const [year, month] = monthStr.split('-').map(Number);
+    const data = await AnalyticsService.getCalendarSummary(year, month);
+    return success(res, data);
+  }
 }

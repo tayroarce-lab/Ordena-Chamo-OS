@@ -10,27 +10,22 @@ interface DailyViewProps {
   onGoToWeek: (weekNumber: number) => void;
 }
 
-/**
- * Estilos de categorías de producto.
- * Se usan clases Tailwind personalizadas definidas en tailwind.config.ts
- * para bg y text de cada categoría.
- */
 const CATEGORY_CLASSES: Record<string, { bg: string; text: string }> = {
-  'Burgers':       { bg: 'bg-cat-burger-bg', text: 'text-cat-burger-text' },
-  'Acompañantes':  { bg: 'bg-cat-side-bg',   text: 'text-cat-side-text' },
-  'Bebidas':       { bg: 'bg-cat-drink-bg',  text: 'text-cat-drink-text' },
-  'Combos':        { bg: 'bg-cat-combo-bg',  text: 'text-cat-combo-text' },
+  'papas':       { bg: 'bg-amber-500/20', text: 'text-amber-500' },
+  'tequeños':    { bg: 'bg-orange-500/20', text: 'text-orange-500' },
 };
-
-/** Fallback para categorías no mapeadas */
-const DEFAULT_CATEGORY_CLASSES = { bg: 'bg-elevated', text: 'text-text-secondary' };
+const DEFAULT_CATEGORY_CLASSES = { bg: 'bg-slate-500/20', text: 'text-slate-400' };
 
 export function DailyView({ data, onGoToMonthly, onGoToWeek }: DailyViewProps) {
+  const d = new Date(`${data.date}T12:00:00Z`);
+  const dayNames = ['DOMINGO', 'LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO'];
+  const dayName = dayNames[d.getUTCDay()] || '';
+  const weekNumber = Math.ceil(d.getUTCDate() / 7);
+
   const breadcrumbs = [
     { label: 'DASHBOARD', onClick: onGoToMonthly },
-    { label: 'JULIO' },
-    { label: 'SEMANA 02', onClick: () => onGoToWeek(2) },
-    { label: `VIERNES ${data.date.split(' ')[1]}` }
+    { label: `SEMANA ${weekNumber}`, onClick: () => onGoToWeek(weekNumber) },
+    { label: `${dayName} ${d.getUTCDate()}` }
   ];
 
   const chartData = data.hourlyChart.map((hour, idx) => ({
@@ -38,111 +33,84 @@ export function DailyView({ data, onGoToMonthly, onGoToWeek }: DailyViewProps) {
     hourIndex: idx,
   }));
 
-  const deliveryPercentage = (data.deliveredOrders / data.totalOrders) * 100;
+  const deliveryPercentage = data.totalOrders > 0 ? (data.deliveredOrders / data.totalOrders) * 100 : 0;
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-bg-primary p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Breadcrumbs */}
+    <div className="overflow-y-auto bg-bg-primary rounded-2xl">
+      <div className="max-w-7xl mx-auto pb-10">
         <Breadcrumbs crumbs={breadcrumbs} />
 
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-text-primary mb-2">Resumen Diario</h1>
-          <p className="text-text-muted">Análisis detallado de operaciones por día</p>
+          <p className="text-text-muted">{data.date}</p>
         </div>
 
-        {/* KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <KpiCard
             title="Ingresos del Día"
-            value={`$${data.dailyIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
-            badge={{ text: `+${data.incomeGrowthPercent}%`, color: 'positive' }}
+            value={`₡${data.dailyIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+            badge={{ text: `${data.incomeGrowthPercent > 0 ? '+' : ''}${data.incomeGrowthPercent}% vs Ayer`, color: data.incomeGrowthPercent >= 0 ? 'positive' : 'negative' }}
           />
 
-          {/* Pedidos Card */}
-          <div className="bg-bg-card border border-border rounded-xl p-4">
+          <div className="bg-analytics-panel border border-analytics-border rounded-xl p-4 shadow-sm">
             <h3 className="text-xs uppercase tracking-widest text-text-muted font-medium mb-3">
-              Pedidos Total
+              Pedidos Totales
             </h3>
             <p className="text-3xl font-bold text-text-primary mb-3">{data.totalOrders}</p>
             <div className="space-y-1">
-              {/* Barra de progreso — el ancho es dinámico (calculado en JS), style es necesario */}
-              <div className="h-2 rounded-full w-full bg-chart-bar-bg">
+              <div className="h-2 rounded-full w-full bg-black/20 overflow-hidden">
                 <div
-                  className="h-2 rounded-full bg-chart-delivery"
+                  className="h-full rounded-full bg-amber-500"
                   style={{ width: `${deliveryPercentage}%` }}
                 />
               </div>
-              <div className="flex gap-3 text-xs">
-                <span className="text-blue-400">● {data.deliveredOrders} Entregados</span>
-                <span className="text-red-400">● {data.canceledOrders} Cancelados</span>
+              <div className="flex gap-3 text-xs pt-1">
+                <span className="text-amber-500 font-medium">● {data.deliveredOrders} Entregados</span>
+                <span className="text-slate-400">● {data.pendingOrders} Pendientes</span>
               </div>
             </div>
           </div>
 
           <KpiCard
             title="Ticket Promedio"
-            value={`$${data.avgTicket.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+            value={`₡${data.avgTicket.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
           />
 
-          {/* Producto Estrella Card */}
-          <div className="bg-bg-card border border-border rounded-xl p-4">
+          <div className="bg-analytics-panel border border-analytics-border rounded-xl p-4 shadow-sm">
             <h3 className="text-xs uppercase tracking-widest text-text-muted font-medium mb-3">
               Producto Estrella
             </h3>
-            <p className="text-2xl font-bold text-accent-gold mb-1">{data.starProduct.name}</p>
-            <p className="text-sm text-text-muted">{data.starProduct.unitsSold} vendidos</p>
+            <p className="text-2xl font-bold text-amber-500 mb-1">{data.starProduct?.name || '-'}</p>
+            <p className="text-sm text-text-muted">{data.starProduct?.unitsSold || 0} vendidos</p>
           </div>
         </div>
 
-        {/* Hourly Distribution Chart */}
-        <div className="bg-bg-card border border-border rounded-xl p-6 mb-8">
+        <div className="bg-analytics-panel border border-analytics-border rounded-xl p-6 mb-8 shadow-sm">
           <h3 className="text-sm uppercase tracking-widest text-text-muted font-semibold mb-6">
             Distribución de Ventas por Hora
           </h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={chartData} margin={{ top: 20, right: 10, left: 0, bottom: 20 }}>
-              <CartesianGrid strokeDasharray="0" stroke="var(--border)" vertical={false} />
-              {/*
-                El prop `style` en XAxis es la API de recharts para estilos SVG internos;
-                no se puede reemplazar con clases de Tailwind.
-              */}
+              <CartesianGrid strokeDasharray="0" stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis
                 dataKey="hour"
-                stroke="var(--text-muted)"
+                stroke="#94a3b8"
                 style={{ fontSize: '11px' }}
-                tick={(props: any) => {
-                  const hours = ['08:00', '12:00', '16:00', '20:00', '00:00'];
-                  if (hours.includes(props.value)) {
-                    return (
-                      <text x={props.x} y={props.y} textAnchor="middle" fill="var(--text-muted)">
-                        {props.value}
-                      </text>
-                    );
-                  }
-                  // Retorna un elemento SVG vacío en lugar de null para satisfacer el tipo ReactElement
-                  return <g />;
-                }}
               />
-              {/*
-                contentStyle / labelStyle son props de la API de recharts,
-                no se pueden reemplazar con clases de Tailwind.
-              */}
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'var(--bg-card-alt)',
-                  border: '1px solid var(--border)',
+                  backgroundColor: '#1e293b',
+                  border: '1px solid #334155',
                   borderRadius: '8px',
                 }}
-                labelStyle={{ color: 'var(--text-primary)' }}
-                formatter={(value: any) => `$${value.toLocaleString()}`}
+                labelStyle={{ color: 'white' }}
+                formatter={(value: any) => `₡${value.toLocaleString()}`}
               />
               <Bar dataKey="income" radius={[6, 6, 0, 0]}>
                 {chartData.map((entry, index) => (
                   <Cell
                     key={index}
-                    fill={entry.isHighlight ? 'var(--accent-gold)' : '#5c3d0a'}
+                    fill={entry.isHighlight ? '#f59e0b' : 'rgba(245, 158, 11, 0.2)'}
                   />
                 ))}
               </Bar>
@@ -150,8 +118,7 @@ export function DailyView({ data, onGoToMonthly, onGoToWeek }: DailyViewProps) {
           </ResponsiveContainer>
         </div>
 
-        {/* Products Table */}
-        <div className="bg-bg-card border border-border rounded-xl p-6">
+        <div className="bg-analytics-panel border border-analytics-border rounded-xl p-6 shadow-sm">
           <h3 className="text-sm uppercase tracking-widest text-text-muted font-semibold mb-6">
             Productos Vendidos
           </h3>
@@ -159,7 +126,7 @@ export function DailyView({ data, onGoToMonthly, onGoToWeek }: DailyViewProps) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border">
+                <tr className="border-b border-analytics-border">
                   <th className="text-left py-3 px-4 font-semibold text-text-muted uppercase text-xs tracking-widest">
                     Producto
                   </th>
@@ -179,53 +146,50 @@ export function DailyView({ data, onGoToMonthly, onGoToWeek }: DailyViewProps) {
               </thead>
               <tbody>
                 {data.soldProducts.map((product, index) => {
-                  const categoryClasses = CATEGORY_CLASSES[product.category] ?? DEFAULT_CATEGORY_CLASSES;
+                  const categoryName = product.category?.toLowerCase() || '';
+                  const categoryClasses = CATEGORY_CLASSES[categoryName] ?? DEFAULT_CATEGORY_CLASSES;
                   const rowVariants = {
                     hidden: { opacity: 0, y: -10 },
                     visible: {
                       opacity: 1,
                       y: 0,
-                      // 'as const' permite que TS infiera el literal exacto que framer-motion espera (Easing)
                       transition: { duration: 0.25, ease: 'easeOut' as const, delay: index * 0.05 },
                     },
                   };
                   return (
                     <motion.tr
                       key={product.id}
-                      className="border-b border-border hover:bg-bg-card-alt/50"
+                      className="border-b border-analytics-border hover:bg-white/5"
                       variants={rowVariants}
                       initial="hidden"
                       animate="visible"
-                      whileHover={{ scale: 1.015, boxShadow: '0 4px 8px rgba(0,0,0,0.08)' }}
-                      transition={{ type: 'spring', stiffness: 100, damping: 14 }}
                     >
-                      <td className="py-4 px-4 text-text-primary">{product.name}</td>
+                      <td className="py-4 px-4 text-text-primary font-medium">{product.name}</td>
                       <td className="py-4 px-4">
                         <span
-                          className={`inline-block px-2 py-1 rounded text-xs font-semibold ${categoryClasses.bg} ${categoryClasses.text}`}
+                          className={`inline-block px-2 py-1 rounded text-xs font-semibold capitalize ${categoryClasses.bg} ${categoryClasses.text}`}
                         >
-                          {product.category}
+                          {product.category || 'N/A'}
                         </span>
                       </td>
                       <td className="py-4 px-4 text-right text-text-primary">{product.quantity}</td>
-                      <td className="py-4 px-4 text-right text-text-muted">
-                        ${product.unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      <td className="py-4 px-4 text-right text-slate-400">
+                        ₡{product.unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </td>
-                      <td className="py-4 px-4 text-right text-accent-gold font-semibold">
-                        ${product.totalGenerated.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      <td className="py-4 px-4 text-right text-amber-500 font-medium">
+                        ₡{product.totalGenerated.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </td>
                     </motion.tr>
                   );
                 })}
               </tbody>
             </table>
-          </div>
-
-          {/* Table Footer */}
-          <div className="mt-6 pt-4 border-t border-border">
-            <p className="text-xs text-text-muted text-center">
-              REPORTE GENERADO AUTOMÁTICAMENTE · ÚLTIMA SINCRONIZACIÓN HACE 1 MIN
-            </p>
+            
+            {data.soldProducts.length === 0 && (
+              <div className="text-center py-8 text-slate-400">
+                No hay productos vendidos este día.
+              </div>
+            )}
           </div>
         </div>
       </div>

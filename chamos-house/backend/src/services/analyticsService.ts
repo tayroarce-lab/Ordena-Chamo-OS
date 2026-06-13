@@ -1,25 +1,17 @@
-import { Op } from 'sequelize';
+import { Op, literal, fn, col } from 'sequelize';
 import { Pedido, DetallePedido, Producto, sequelize } from '../models';
-
-/**
- * TODO: Interfaces de respuesta de analytics
- * Deben coincidir con las interfaces TypeScript del frontend
- */
 
 export interface MonthlyAnalyticsResponse {
   period: string;
   monthlyIncome: number;
   incomeGrowthPercent: number;
   ytdRevenue: number;
-  starProduct: { name: string; unitsSold: number };
-  weeklyChart: { label: string; real: number; projected: number }[];
-  recordDay: { dayName: string; date: number; amount: number };
-  bestWeek: { weekNumber: number; percentVsAvg: number };
-  stockTable: Array<{ id: string; name: string; unitsSoldMonth: number; stockAvailable: number; status: string }>;
-  kitchenStatus: { capacityPercent: number; isActive: boolean };
-  avgPrepMinutes: number;
-  prepDeltaMinutes: number;
-  stockAlerts: Array<{ name: string; level: string }>;
+  totalOrders: number;
+  starProduct: { name: string; unitsSold: number } | null;
+  weeklyChart: { label: string; real: number }[];
+  recordDay: { dayName: string; date: number; amount: number } | null;
+  bestWeek: { weekNumber: number; percentVsAvg: number } | null;
+  productBreakdown: { id: string; name: string; category: string | null; quantitySold: number; revenue: number }[];
 }
 
 export interface WeeklyAnalyticsResponse {
@@ -27,14 +19,11 @@ export interface WeeklyAnalyticsResponse {
   dateRange: string;
   weeklyIncome: number;
   incomeGrowthPercent: number;
+  totalOrders: number;
   peakDay: string;
-  peakTime: string;
-  top3Products: Array<{ rank: 1 | 2 | 3; name: string; units: number }>;
-  dailyChart: Array<{ day: string; income: number; isHighlight: boolean }>;
-  unitsPerProduct: Array<{ name: string; units: number }>;
-  avgPrepMinutes: number;
-  customerRating: number;
-  weeklyPredictionText: string;
+  top3Products: { rank: 1 | 2 | 3; name: string; units: number }[];
+  dailyChart: { day: string; income: number; isHighlight: boolean }[];
+  unitsPerProduct: { name: string; units: number }[];
 }
 
 export interface DailyAnalyticsResponse {
@@ -43,185 +32,547 @@ export interface DailyAnalyticsResponse {
   incomeGrowthPercent: number;
   totalOrders: number;
   deliveredOrders: number;
-  canceledOrders: number;
+  pendingOrders: number;
   avgTicket: number;
-  starProduct: { name: string; unitsSold: number };
-  hourlyChart: Array<{ hour: string; income: number; isHighlight: boolean }>;
-  soldProducts: Array<{
+  starProduct: { name: string; unitsSold: number } | null;
+  hourlyChart: { hour: string; income: number; isHighlight: boolean }[];
+  soldProducts: {
     id: string;
     name: string;
-    category: string;
+    category: string | null;
     quantity: number;
     unitPrice: number;
     totalGenerated: number;
-  }>;
+  }[];
+}
+
+export interface CalendarSummaryResponse {
+  days: { date: string; totalRevenue: number; orderCount: number; hasOrders: boolean }[];
 }
 
 export class AnalyticsService {
-  /**
-   * Obtiene análisis mensuales
-   * Para ahora devuelve mock data como fallback
-   * TODO: Implementar queries reales con Sequelize
-   */
+
+  private static getMonthName(monthNumber: number): string {
+    const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    return months[monthNumber - 1] || 'Mes';
+  }
+
+  private static getDayName(dayIndex: number): string {
+    const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    return days[dayIndex] || 'Día';
+  }
+  
+  private static getDayAbbr(dayIndex: number): string {
+    const days = ['DOM', 'LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB'];
+    return days[dayIndex] || 'DIA';
+  }
+
   static async getMonthlyAnalytics(year: number, month: number): Promise<MonthlyAnalyticsResponse> {
-    try {
-      // TODO: Implementar queries reales
-      // const startDate = new Date(year, month - 1, 1);
-      // const endDate = new Date(year, month, 0);
-      
-      // Queries esperadas:
-      // 1. Ingresos del mes (sum de pedidos entregados)
-      // 2. Top producto del mes
-      // 3. Ventas por semana (4 semanas)
-      // 4. Día con máximo ingreso
-      // 5. Stock disponible (desde tabla de inventario si existe)
-      // 6. Tiempo promedio de preparación (promedio de duraciones)
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+    
+    const prevMonthStartDate = month === 1 ? new Date(year - 1, 11, 1) : new Date(year, month - 2, 1);
+    const prevMonthEndDate = month === 1 ? new Date(year - 1, 11, 31, 23, 59, 59, 999) : new Date(year, month - 1, 0, 23, 59, 59, 999);
 
-      // Por ahora devolver error para forzar fallback a mock
-      throw new Error('API no implementada aún');
-    } catch {
-      // Fallback a mock data
-      console.log('Usando mock data para monthly analytics');
-      return {
-        period: `Julio 2025`,
-        monthlyIncome: 24500,
-        incomeGrowthPercent: 12.5,
-        ytdRevenue: 142800,
-        starProduct: { name: 'Chamos Burger', unitsSold: 842 },
-        weeklyChart: [
-          { label: 'Semana 1', real: 5200, projected: 5000 },
-          { label: 'Semana 2', real: 7820, projected: 6500 },
-          { label: 'Semana 3', real: 6100, projected: 6200 },
-          { label: 'Semana 4', real: 5380, projected: 5800 },
-        ],
-        recordDay: { dayName: 'Viernes', date: 12, amount: 2450 },
-        bestWeek: { weekNumber: 2, percentVsAvg: 18 },
-        stockTable: [
-          { id: '1', name: 'Chamos Burger', unitsSoldMonth: 842, stockAvailable: 45, status: 'Bajo Stock' },
-          { id: '2', name: 'Combo Pareja', unitsSoldMonth: 412, stockAvailable: 120, status: 'Saludable' },
-          { id: '3', name: 'Malta Polar', unitsSoldMonth: 650, stockAvailable: 200, status: 'Saludable' },
-          { id: '4', name: 'Papas Fritas XL', unitsSoldMonth: 530, stockAvailable: 15, status: 'Crítico' },
-        ],
-        kitchenStatus: { capacityPercent: 85, isActive: true },
-        avgPrepMinutes: 14.2,
-        prepDeltaMinutes: -2.5,
-        stockAlerts: [
-          { name: 'Pan Brioche', level: 'Bajo' },
-          { name: 'Salsa Secreta', level: 'Medio' },
-        ],
+    const yearStartDate = new Date(year, 0, 1);
+
+    // 1. Ingresos y órdenes mensuales (entregados para ingresos, todos para conteo)
+    const currentMonthOrders = await Pedido.findAll({
+      where: {
+        f_creacion: { [Op.between]: [startDate, endDate] }
+      },
+      attributes: [
+        'estado',
+        [fn('SUM', col('total')), 'totalIncome'],
+        [fn('COUNT', col('id')), 'totalOrders']
+      ],
+      group: ['estado'],
+      raw: true
+    }) as unknown as { estado: string; totalIncome: string; totalOrders: string }[];
+
+    let monthlyIncome = 0;
+    let totalOrders = 0;
+    currentMonthOrders.forEach(row => {
+      totalOrders += Number(row.totalOrders);
+      if (row.estado === 'entregado') {
+        monthlyIncome += Number(row.totalIncome);
+      }
+    });
+
+    // 2. Ingresos del mes anterior para crecimiento
+    const prevMonthOrders = await Pedido.findOne({
+      where: {
+        estado: 'entregado',
+        f_creacion: { [Op.between]: [prevMonthStartDate, prevMonthEndDate] }
+      },
+      attributes: [[fn('SUM', col('total')), 'totalIncome']],
+      raw: true
+    }) as unknown as { totalIncome: string } | null;
+
+    const prevIncome = Number(prevMonthOrders?.totalIncome || 0);
+    const incomeGrowthPercent = prevIncome === 0 ? 0 : Math.round(((monthlyIncome - prevIncome) / prevIncome) * 100);
+
+    // 3. YTD Revenue
+    const ytdOrders = await Pedido.findOne({
+      where: {
+        estado: 'entregado',
+        f_creacion: { [Op.between]: [yearStartDate, endDate] }
+      },
+      attributes: [[fn('SUM', col('total')), 'totalIncome']],
+      raw: true
+    }) as unknown as { totalIncome: string } | null;
+    const ytdRevenue = Number(ytdOrders?.totalIncome || 0);
+
+    // 4. Breakdown por producto y Top Producto
+    const productBreakdownRaw = await DetallePedido.findAll({
+      attributes: [
+        'producto_id',
+        [fn('SUM', col('DetallePedido.cantidad')), 'quantitySold'],
+        [fn('SUM', literal('`DetallePedido`.`cantidad` * `DetallePedido`.`p_unitario`')), 'revenue'],
+      ],
+      include: [
+        {
+          model: Producto.unscoped(),
+          as: 'producto',
+          attributes: ['nombre', 'categoria'],
+        },
+        {
+          model: Pedido,
+          as: 'pedido',
+          attributes: [],
+          where: {
+            estado: 'entregado',
+            f_creacion: { [Op.between]: [startDate, endDate] },
+          },
+        },
+      ],
+      group: ['producto_id', 'producto.id'],
+      order: [[literal('quantitySold'), 'DESC']],
+      raw: true,
+      nest: true,
+    }) as unknown as any[];
+
+    const productBreakdown = productBreakdownRaw.map(row => ({
+      id: String(row.producto_id),
+      name: row.producto?.nombre || 'Desconocido',
+      category: row.producto?.categoria || null,
+      quantitySold: Number(row.quantitySold) || 0,
+      revenue: Number(row.revenue) || 0
+    }));
+
+    const starProduct = productBreakdown.length > 0 ? {
+      name: productBreakdown[0].name,
+      unitsSold: productBreakdown[0].quantitySold
+    } : null;
+
+    // 5. Agrupación por Día para Record Day y Weekly Chart
+    const dailyIncomeRaw = await Pedido.findAll({
+      where: {
+        estado: 'entregado',
+        f_creacion: { [Op.between]: [startDate, endDate] }
+      },
+      attributes: [
+        [fn('DATE', col('f_creacion')), 'dateStr'],
+        [fn('SUM', col('total')), 'dailyIncome']
+      ],
+      group: [fn('DATE', col('f_creacion'))],
+      order: [[literal('dailyIncome'), 'DESC']],
+      raw: true
+    }) as unknown as { dateStr: string; dailyIncome: string }[];
+
+    let recordDay = null;
+    if (dailyIncomeRaw.length > 0) {
+      const bestDay = dailyIncomeRaw[0];
+      const bestDate = new Date(`${bestDay.dateStr}T12:00:00Z`);
+      recordDay = {
+        dayName: this.getDayName(bestDate.getUTCDay()),
+        date: bestDate.getUTCDate(),
+        amount: Number(bestDay.dailyIncome)
       };
     }
+
+    // Calcular Chart por semana simple (Dividiendo el mes en 4 o 5)
+    const weeksMap = new Map<number, number>();
+    let totalWeeklyAverages = 0;
+    
+    dailyIncomeRaw.forEach(row => {
+      const d = new Date(`${row.dateStr}T12:00:00Z`);
+      // Definimos semana 1-5 basado en la fecha
+      const weekIndex = Math.ceil(d.getUTCDate() / 7);
+      weeksMap.set(weekIndex, (weeksMap.get(weekIndex) || 0) + Number(row.dailyIncome));
+    });
+
+    const weeklyChart = [];
+    let bestWeekNum = 1;
+    let maxWeekInc = 0;
+    let sumWeeks = 0;
+    let countWeeks = 0;
+
+    for (let i = 1; i <= 5; i++) {
+      const inc = weeksMap.get(i) || 0;
+      if (inc > 0 || i <= 4) { // Asegurar al menos 4 semanas
+        weeklyChart.push({ label: `Semana ${i}`, real: inc });
+        if (inc > maxWeekInc) {
+          maxWeekInc = inc;
+          bestWeekNum = i;
+        }
+        sumWeeks += inc;
+        countWeeks++;
+      }
+    }
+
+    const avgWeek = countWeeks > 0 ? sumWeeks / countWeeks : 0;
+    const percentVsAvg = avgWeek > 0 ? Math.round(((maxWeekInc - avgWeek) / avgWeek) * 100) : 0;
+    
+    const bestWeek = countWeeks > 0 ? { weekNumber: bestWeekNum, percentVsAvg } : null;
+
+    return {
+      period: `${this.getMonthName(month)} ${year}`,
+      monthlyIncome,
+      incomeGrowthPercent,
+      ytdRevenue,
+      totalOrders,
+      starProduct,
+      weeklyChart,
+      recordDay,
+      bestWeek,
+      productBreakdown
+    };
   }
 
-  /**
-   * Obtiene análisis semanales
-   * Para ahora devuelve mock data como fallback
-   * TODO: Implementar queries reales con Sequelize
-   */
   static async getWeeklyAnalytics(year: number, month: number, weekNumber: number): Promise<WeeklyAnalyticsResponse> {
-    try {
-      // TODO: Implementar queries reales
-      // Calcular rango de fechas de la semana
-      // Queries esperadas:
-      // 1. Ingresos de la semana
-      // 2. Ventas por día de la semana
-      // 3. Productos más vendidos
-      // 4. Día pico de la semana
+    // Calculamos el rango de fechas de la semana (aproximado basado en el mes y numero de semana)
+    // Semana 1: 1-7, Semana 2: 8-14, Semana 3: 15-21, Semana 4: 22-28, Semana 5: 29-fin
+    const startDay = (weekNumber - 1) * 7 + 1;
+    let endDay = startDay + 6;
+    const lastDayOfMonth = new Date(year, month, 0).getDate();
+    if (endDay > lastDayOfMonth || weekNumber === 5) endDay = lastDayOfMonth;
 
-      throw new Error('API no implementada aún');
-    } catch {
-      // Fallback a mock data
-      console.log('Usando mock data para weekly analytics');
-      return {
-        weekLabel: 'Semana 02',
-        dateRange: '08 Jul - 14 Jul',
-        weeklyIncome: 6125,
-        incomeGrowthPercent: 12.4,
-        peakDay: 'Viernes',
-        peakTime: '20:30 hrs',
-        top3Products: [
-          { rank: 1, name: 'Chamos Burger', units: 184 },
-          { rank: 2, name: 'Pepsi 1.5L', units: 110 },
-          { rank: 3, name: 'Tequeños', units: 92 },
-        ],
-        dailyChart: [
-          { day: 'LUN', income: 650, isHighlight: false },
-          { day: 'MAR', income: 720, isHighlight: false },
-          { day: 'MIE', income: 810, isHighlight: false },
-          { day: 'JUE', income: 980, isHighlight: false },
-          { day: 'VIE', income: 1420, isHighlight: true },
-          { day: 'SAB', income: 990, isHighlight: false },
-          { day: 'DOM', income: 555, isHighlight: false },
-        ],
-        unitsPerProduct: [
-          { name: 'Chamos Burger', units: 184 },
-          { name: 'Papas Fritas XL', units: 145 },
-          { name: 'Malta Polar', units: 120 },
-          { name: 'Pepsi 1.5L', units: 110 },
-          { name: 'Combo', units: 98 },
-        ],
-        avgPrepMinutes: 14.2,
-        customerRating: 4.8,
-        weeklyPredictionText: 'Se espera un incremento del 15% en pedidos de "Chamos Burger" para el próximo fin de semana.',
-      };
+    const startDate = new Date(year, month - 1, startDay);
+    const endDate = new Date(year, month - 1, endDay, 23, 59, 59, 999);
+
+    // Mes previo para crecimiento (vamos a compararlo con la misma semana del mes anterior para simplificar, o 7 dias antes)
+    // Lo más simple: comparar con los 7 días inmediatamente anteriores
+    const prevStartDate = new Date(startDate);
+    prevStartDate.setDate(prevStartDate.getDate() - 7);
+    const prevEndDate = new Date(endDate);
+    prevEndDate.setDate(prevEndDate.getDate() - 7);
+
+    // 1. Ingresos y órdenes
+    const currentOrders = await Pedido.findAll({
+      where: {
+        f_creacion: { [Op.between]: [startDate, endDate] }
+      },
+      attributes: [
+        'estado',
+        [fn('SUM', col('total')), 'totalIncome'],
+        [fn('COUNT', col('id')), 'totalOrders']
+      ],
+      group: ['estado'],
+      raw: true
+    }) as unknown as { estado: string; totalIncome: string; totalOrders: string }[];
+
+    let weeklyIncome = 0;
+    let totalOrders = 0;
+    currentOrders.forEach(row => {
+      totalOrders += Number(row.totalOrders);
+      if (row.estado === 'entregado') {
+        weeklyIncome += Number(row.totalIncome);
+      }
+    });
+
+    // 2. Crecimiento
+    const prevOrders = await Pedido.findOne({
+      where: {
+        estado: 'entregado',
+        f_creacion: { [Op.between]: [prevStartDate, prevEndDate] }
+      },
+      attributes: [[fn('SUM', col('total')), 'totalIncome']],
+      raw: true
+    }) as unknown as { totalIncome: string } | null;
+
+    const prevIncome = Number(prevOrders?.totalIncome || 0);
+    const incomeGrowthPercent = prevIncome === 0 ? 0 : Math.round(((weeklyIncome - prevIncome) / prevIncome) * 100);
+
+    // 3. Ventas por día
+    const dailyIncomeRaw = await Pedido.findAll({
+      where: {
+        estado: 'entregado',
+        f_creacion: { [Op.between]: [startDate, endDate] }
+      },
+      attributes: [
+        [fn('DATE', col('f_creacion')), 'dateStr'],
+        [fn('SUM', col('total')), 'dailyIncome']
+      ],
+      group: [fn('DATE', col('f_creacion'))],
+      raw: true
+    }) as unknown as { dateStr: string; dailyIncome: string }[];
+
+    const dailyMap = new Map<string, number>();
+    let maxDaily = 0;
+    let peakDayStr = '';
+
+    dailyIncomeRaw.forEach(row => {
+      const val = Number(row.dailyIncome);
+      dailyMap.set(row.dateStr, val);
+      if (val > maxDaily) {
+        maxDaily = val;
+        peakDayStr = row.dateStr;
+      }
+    });
+
+    const dailyChart = [];
+    const peakDayDate = peakDayStr ? new Date(`${peakDayStr}T12:00:00Z`) : null;
+    const peakDay = peakDayDate ? this.getDayName(peakDayDate.getUTCDay()) : '-';
+
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split('T')[0];
+      const inc = dailyMap.get(dateStr) || 0;
+      dailyChart.push({
+        day: this.getDayAbbr(d.getDay()),
+        income: inc,
+        isHighlight: inc === maxDaily && inc > 0
+      });
     }
+
+    // 4. Top productos
+    const productBreakdownRaw = await DetallePedido.findAll({
+      attributes: [
+        'producto_id',
+        [fn('SUM', col('DetallePedido.cantidad')), 'quantitySold'],
+      ],
+      include: [
+        {
+          model: Producto.unscoped(),
+          as: 'producto',
+          attributes: ['nombre'],
+        },
+        {
+          model: Pedido,
+          as: 'pedido',
+          attributes: [],
+          where: {
+            estado: 'entregado',
+            f_creacion: { [Op.between]: [startDate, endDate] },
+          },
+        },
+      ],
+      group: ['producto_id', 'producto.id'],
+      order: [[literal('quantitySold'), 'DESC']],
+      limit: 10,
+      raw: true,
+      nest: true,
+    }) as unknown as any[];
+
+    const unitsPerProduct = productBreakdownRaw.map(row => ({
+      name: row.producto?.nombre || 'Desconocido',
+      units: Number(row.quantitySold) || 0
+    }));
+
+    const top3Products: { rank: 1 | 2 | 3; name: string; units: number }[] = [];
+    for (let i = 0; i < Math.min(3, unitsPerProduct.length); i++) {
+      top3Products.push({
+        rank: (i + 1) as 1 | 2 | 3,
+        name: unitsPerProduct[i].name,
+        units: unitsPerProduct[i].units
+      });
+    }
+
+    return {
+      weekLabel: `Semana ${weekNumber}`,
+      dateRange: `${startDay} ${this.getMonthName(month).substring(0,3)} - ${endDay} ${this.getMonthName(month).substring(0,3)}`,
+      weeklyIncome,
+      incomeGrowthPercent,
+      totalOrders,
+      peakDay,
+      top3Products,
+      dailyChart,
+      unitsPerProduct
+    };
   }
 
-  /**
-   * Obtiene análisis diarios
-   * Para ahora devuelve mock data como fallback
-   * TODO: Implementar queries reales con Sequelize
-   */
   static async getDailyAnalytics(date: string): Promise<DailyAnalyticsResponse> {
-    try {
-      // TODO: Implementar queries reales
-      // const targetDate = new Date(date);
-      // Queries esperadas:
-      // 1. Ingresos del día
-      // 2. Pedidos entregados/cancelados
-      // 3. Productos vendidos con detalles
-      // 4. Ventas por hora
+    const startDate = new Date(`${date}T00:00:00.000Z`); // UTC midnight
+    const endDate = new Date(`${date}T23:59:59.999Z`);
 
-      throw new Error('API no implementada aún');
-    } catch {
-      // Fallback a mock data
-      console.log('Usando mock data para daily analytics');
-      return {
-        date: '15 de Julio, 2025',
-        dailyIncome: 1847.5,
-        incomeGrowthPercent: 12,
-        totalOrders: 47,
-        deliveredOrders: 42,
-        canceledOrders: 2,
-        avgTicket: 39.3,
-        starProduct: { name: 'Chamos Burger', unitsSold: 24 },
-        hourlyChart: [
-          { hour: '08:00', income: 120, isHighlight: false },
-          { hour: '09:00', income: 180, isHighlight: false },
-          { hour: '10:00', income: 240, isHighlight: false },
-          { hour: '11:00', income: 310, isHighlight: false },
-          { hour: '12:00', income: 520, isHighlight: true },
-          { hour: '13:00', income: 390, isHighlight: false },
-          { hour: '14:00', income: 280, isHighlight: false },
-          { hour: '15:00', income: 190, isHighlight: false },
-          { hour: '16:00', income: 160, isHighlight: false },
-          { hour: '17:00', income: 210, isHighlight: false },
-          { hour: '18:00', income: 290, isHighlight: false },
-          { hour: '19:00', income: 370, isHighlight: false },
-          { hour: '20:00', income: 510, isHighlight: true },
-          { hour: '21:00', income: 380, isHighlight: false },
-          { hour: '22:00', income: 260, isHighlight: false },
-          { hour: '23:00', income: 150, isHighlight: false },
-          { hour: '00:00', income: 80, isHighlight: false },
-        ],
-        soldProducts: [
-          { id: '1', name: 'Chamos Burger', category: 'Burgers', quantity: 24, unitPrice: 12.5, totalGenerated: 300.0 },
-          { id: '2', name: 'Papas Fritas XL', category: 'Acompañantes', quantity: 18, unitPrice: 4.5, totalGenerated: 81.0 },
-          { id: '3', name: 'Malta Polar', category: 'Bebidas', quantity: 15, unitPrice: 2.5, totalGenerated: 37.5 },
-          { id: '4', name: 'Combo Pareja', category: 'Combos', quantity: 10, unitPrice: 22.0, totalGenerated: 220.0 },
-          { id: '5', name: 'Pepsi 1.5L', category: 'Bebidas', quantity: 8, unitPrice: 3.5, totalGenerated: 28.0 },
-        ],
-      };
+    const prevDate = new Date(startDate);
+    prevDate.setDate(prevDate.getDate() - 1);
+    const prevEndDate = new Date(endDate);
+    prevEndDate.setDate(prevEndDate.getDate() - 1);
+
+    // 1. Ingresos y conteos
+    const currentOrders = await Pedido.findAll({
+      where: {
+        f_creacion: { [Op.between]: [startDate, endDate] }
+      },
+      attributes: [
+        'estado',
+        [fn('SUM', col('total')), 'totalIncome'],
+        [fn('COUNT', col('id')), 'orderCount']
+      ],
+      group: ['estado'],
+      raw: true
+    }) as unknown as { estado: string; totalIncome: string; orderCount: string }[];
+
+    let dailyIncome = 0;
+    let totalOrders = 0;
+    let deliveredOrders = 0;
+    let pendingOrders = 0;
+
+    currentOrders.forEach(row => {
+      const c = Number(row.orderCount);
+      totalOrders += c;
+      if (row.estado === 'entregado') {
+        dailyIncome += Number(row.totalIncome);
+        deliveredOrders += c;
+      } else {
+        pendingOrders += c;
+      }
+    });
+
+    const avgTicket = deliveredOrders > 0 ? dailyIncome / deliveredOrders : 0;
+
+    // 2. Crecimiento vs día anterior
+    const prevOrders = await Pedido.findOne({
+      where: {
+        estado: 'entregado',
+        f_creacion: { [Op.between]: [prevDate, prevEndDate] }
+      },
+      attributes: [[fn('SUM', col('total')), 'totalIncome']],
+      raw: true
+    }) as unknown as { totalIncome: string } | null;
+
+    const prevIncome = Number(prevOrders?.totalIncome || 0);
+    const incomeGrowthPercent = prevIncome === 0 ? 0 : Math.round(((dailyIncome - prevIncome) / prevIncome) * 100);
+
+    // 3. Productos vendidos
+    const productBreakdownRaw = await DetallePedido.findAll({
+      attributes: [
+        'producto_id',
+        [fn('SUM', col('DetallePedido.cantidad')), 'quantitySold'],
+        [fn('SUM', literal('`DetallePedido`.`cantidad` * `DetallePedido`.`p_unitario`')), 'revenue'],
+        [fn('MAX', col('DetallePedido.p_unitario')), 'unitPrice']
+      ],
+      include: [
+        {
+          model: Producto.unscoped(),
+          as: 'producto',
+          attributes: ['nombre', 'categoria'],
+        },
+        {
+          model: Pedido,
+          as: 'pedido',
+          attributes: [],
+          where: {
+            estado: 'entregado',
+            f_creacion: { [Op.between]: [startDate, endDate] },
+          },
+        },
+      ],
+      group: ['producto_id', 'producto.id'],
+      order: [[literal('quantitySold'), 'DESC']],
+      raw: true,
+      nest: true,
+    }) as unknown as any[];
+
+    const soldProducts = productBreakdownRaw.map(row => ({
+      id: String(row.producto_id),
+      name: row.producto?.nombre || 'Desconocido',
+      category: row.producto?.categoria || null,
+      quantity: Number(row.quantitySold) || 0,
+      unitPrice: Number(row.unitPrice) || 0,
+      totalGenerated: Number(row.revenue) || 0
+    }));
+
+    const starProduct = soldProducts.length > 0 ? {
+      name: soldProducts[0].name,
+      unitsSold: soldProducts[0].quantity
+    } : null;
+
+    // 4. Ventas por hora
+    const hourlyIncomeRaw = await Pedido.findAll({
+      where: {
+        estado: 'entregado',
+        f_creacion: { [Op.between]: [startDate, endDate] }
+      },
+      attributes: [
+        [fn('HOUR', col('f_creacion')), 'hourNum'],
+        [fn('SUM', col('total')), 'hourlyIncome']
+      ],
+      group: [fn('HOUR', col('f_creacion'))],
+      raw: true
+    }) as unknown as { hourNum: number; hourlyIncome: string }[];
+
+    const hourMap = new Map<number, number>();
+    let maxHourInc = 0;
+    hourlyIncomeRaw.forEach(row => {
+      const inc = Number(row.hourlyIncome);
+      hourMap.set(row.hourNum, inc);
+      if (inc > maxHourInc) maxHourInc = inc;
+    });
+
+    const hourlyChart = [];
+    for (let h = 8; h <= 23; h++) {
+      const inc = hourMap.get(h) || 0;
+      hourlyChart.push({
+        hour: `${h.toString().padStart(2, '0')}:00`,
+        income: inc,
+        isHighlight: inc === maxHourInc && inc > 0
+      });
     }
+
+    // Convert date string
+    const dDate = new Date(`${date}T12:00:00Z`);
+    const dateStrFormatted = `${dDate.getUTCDate()} de ${this.getMonthName(dDate.getUTCMonth() + 1)}, ${dDate.getUTCFullYear()}`;
+
+    return {
+      date: dateStrFormatted,
+      dailyIncome,
+      incomeGrowthPercent,
+      totalOrders,
+      deliveredOrders,
+      pendingOrders,
+      avgTicket,
+      starProduct,
+      hourlyChart,
+      soldProducts
+    };
+  }
+
+  static async getCalendarSummary(year: number, month: number): Promise<CalendarSummaryResponse> {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+    const dailyStats = await Pedido.findAll({
+      where: {
+        f_creacion: { [Op.between]: [startDate, endDate] }
+      },
+      attributes: [
+        [fn('DATE', col('f_creacion')), 'dateStr'],
+        [fn('SUM', literal("CASE WHEN estado = 'entregado' THEN total ELSE 0 END")), 'totalRevenue'],
+        [fn('COUNT', col('id')), 'orderCount']
+      ],
+      group: [fn('DATE', col('f_creacion'))],
+      raw: true
+    }) as unknown as { dateStr: string; totalRevenue: string; orderCount: string }[];
+
+    const daysMap = new Map<string, any>();
+    dailyStats.forEach(row => {
+      daysMap.set(row.dateStr, {
+        date: row.dateStr,
+        totalRevenue: Number(row.totalRevenue) || 0,
+        orderCount: Number(row.orderCount) || 0,
+        hasOrders: Number(row.orderCount) > 0
+      });
+    });
+
+    const days = [];
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split('T')[0];
+      const stats = daysMap.get(dateStr) || { date: dateStr, totalRevenue: 0, orderCount: 0, hasOrders: false };
+      days.push(stats);
+    }
+
+    return { days };
   }
 }

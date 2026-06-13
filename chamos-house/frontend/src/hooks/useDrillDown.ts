@@ -1,47 +1,63 @@
 import { useState, useMemo } from 'react';
-import type { DrillDownState, BreadcrumbItem } from '../types/analytics.types';
+import type { DrillDownState, BreadcrumbItem, DashboardView } from '../types/analytics.types';
 
 interface UseDrillDownReturn {
   state: DrillDownState;
   goToMonthly: () => void;
   goToWeek: (weekNumber: number) => void;
-  goToDay: (dayNumber: number) => void;
+  goToDay: (date: Date) => void;
+  changeMonth: (date: Date) => void;
+  setView: (view: DashboardView) => void;
   breadcrumbs: BreadcrumbItem[];
 }
 
 export function useDrillDown(): UseDrillDownReturn {
+  const today = new Date();
   const [state, setState] = useState<DrillDownState>({
     view: 'monthly',
-    year: 2025,
-    month: 7,
+    year: today.getFullYear(),
+    month: today.getMonth() + 1,
+    day: today.getDate(),
+    dateStr: today.toISOString().split('T')[0],
   });
 
   const goToMonthly = () => {
-    setState({
-      view: 'monthly',
-      year: state.year,
-      month: state.month,
-    });
+    setState(s => ({ ...s, view: 'monthly' }));
   };
 
   const goToWeek = (weekNumber: number) => {
-    setState({
-      view: 'weekly',
-      year: state.year,
-      month: state.month,
-      weekNumber,
-    });
+    setState(s => ({ ...s, view: 'weekly', weekNumber }));
   };
 
-  const goToDay = (dayNumber: number) => {
-    setState({
+  const goToDay = (date: Date) => {
+    // Para evitar desfases de timezone, trabajamos localmente
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+
+    setState(s => ({
+      ...s,
       view: 'daily',
-      year: state.year,
-      month: state.month,
-      weekNumber: state.weekNumber,
-      day: dayNumber,
-    });
+      year,
+      month,
+      day,
+      dateStr,
+      weekNumber: Math.ceil(day / 7)
+    }));
   };
+
+  const changeMonth = (date: Date) => {
+    setState(s => ({
+      ...s,
+      year: date.getFullYear(),
+      month: date.getMonth() + 1
+    }));
+  };
+
+  const setView = (view: DashboardView) => {
+    setState(s => ({ ...s, view }));
+  }
 
   const breadcrumbs = useMemo<BreadcrumbItem[]>(() => {
     const monthNames = [
@@ -49,7 +65,6 @@ export function useDrillDown(): UseDrillDownReturn {
       'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
     ];
     const monthLabel = monthNames[state.month - 1] || 'MES';
-    const dayNames = ['DOMINGO', 'LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO'];
 
     if (state.view === 'monthly') {
       return [{ label: 'DASHBOARD' }];
@@ -64,12 +79,14 @@ export function useDrillDown(): UseDrillDownReturn {
     }
 
     if (state.view === 'daily') {
-      // Compute day of week (simplified - on real scenario would need actual date)
-      const dayName = dayNames[state.day ? (state.day % 7) : 0] || 'DÍA';
+      const dDate = state.dateStr ? new Date(`${state.dateStr}T12:00:00Z`) : new Date();
+      const dayNames = ['DOMINGO', 'LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO'];
+      const dayName = dayNames[dDate.getUTCDay()] || 'DÍA';
+      
       return [
         { label: 'DASHBOARD', onClick: goToMonthly },
         { label: monthLabel },
-        { label: `SEMANA ${state.weekNumber}`, onClick: () => goToWeek(state.weekNumber!) },
+        { label: `SEMANA ${state.weekNumber || 1}`, onClick: () => goToWeek(state.weekNumber || 1) },
         { label: `${dayName} ${state.day}` },
       ];
     }
@@ -82,6 +99,8 @@ export function useDrillDown(): UseDrillDownReturn {
     goToMonthly,
     goToWeek,
     goToDay,
+    changeMonth,
+    setView,
     breadcrumbs,
   };
 }
