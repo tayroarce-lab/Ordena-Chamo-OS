@@ -42,10 +42,20 @@ export function LoginPage() {
       variants={loginContainerVariants}
     >
       <motion.div
-        className="relative hidden overflow-hidden bg-surface lg:flex lg:flex-col lg:justify-between lg:p-12"
+        className="relative hidden overflow-hidden bg-black lg:flex lg:flex-col lg:justify-between lg:p-12"
         variants={loginItemVariants}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-transparent to-transparent" />
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 h-full w-full object-cover opacity-50"
+        >
+          {/* Se espera que el usuario coloque el video en frontend/public/login-bg.mp4 */}
+          <source src="/login-bg.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/40 to-transparent" />
         <motion.div className="relative z-10" variants={loginItemVariants}>
           <motion.div className="mb-8" variants={loginItemVariants}>
             <img src="/logo.png" alt="Chamos House" className="h-20 w-20 rounded-full object-cover" />
