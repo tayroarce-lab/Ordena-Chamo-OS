@@ -1,11 +1,11 @@
 import { useState, useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChevronLeft, ChevronRight, MoreVertical, Search } from 'lucide-react';
 import type { MonthlyData } from '@/types/analytics.types';
 import { KpiCard } from './shared/KpiCard';
 import { GoldBadge } from './shared/GoldBadge';
 import { StatusBadge } from './shared/StatusBadge';
-import { Breadcrumbs } from './shared/Breadcrumbs';
+import { motion } from 'framer-motion';
 
 interface MonthlyViewProps {
   data: MonthlyData;
@@ -13,6 +13,20 @@ interface MonthlyViewProps {
 }
 
 const ITEMS_PER_PAGE = 4;
+
+const sectionVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.35, staggerChildren: 0.1, delayChildren: 0.05 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.25 } },
+};
 
 export function MonthlyView({ data, onWeekClick }: MonthlyViewProps) {
   const [searchFilter, setSearchFilter] = useState('');
@@ -48,38 +62,49 @@ export function MonthlyView({ data, onWeekClick }: MonthlyViewProps) {
   };
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-bg-primary p-6">
+    <motion.div
+      className="min-h-screen overflow-y-auto bg-bg-primary p-6"
+      initial="hidden"
+      animate="visible"
+      variants={sectionVariants}
+    >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <motion.div className="mb-8" variants={itemVariants}>
           <h1 className="text-3xl font-bold text-text-primary mb-2">Análisis Mensual</h1>
           <p className="text-text-muted mb-4">Resumen de operaciones para {data.period}</p>
-        </div>
+        </motion.div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          <KpiCard
-            title="Ingresos del Mes"
-            value={`$${data.monthlyIncome.toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}`}
-            badge={{ text: `+${data.incomeGrowthPercent}%`, color: 'positive' }}
-          />
-          <KpiCard
-            title="Recaudación Acumulada"
-            value={`$${data.ytdRevenue.toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}`}
-            badge={{ text: 'YTD 2025', color: 'neutral' }}
-          />
-          <KpiCard
-            title="Producto Estrella"
-            value={data.starProduct.name}
-            footer={`${data.starProduct.unitsSold} unidades vendidas`}
-          />
-        </div>
+        <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8" variants={itemVariants}>
+          <motion.div variants={itemVariants}>
+            <KpiCard
+              title="Ingresos del Mes"
+              value={`$${data.monthlyIncome.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}`}
+              badge={{ text: `+${data.incomeGrowthPercent}%`, color: 'positive' }}
+            />
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <KpiCard
+              title="Recaudación Acumulada"
+              value={`$${data.ytdRevenue.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}`}
+              badge={{ text: 'YTD 2025', color: 'neutral' }}
+            />
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <KpiCard
+              title="Producto Estrella"
+              value={data.starProduct.name}
+              footer={`${data.starProduct.unitsSold} unidades vendidas`}
+            />
+          </motion.div>
+        </motion.div>
 
         {/* Weekly Chart + Cards Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -196,50 +221,54 @@ export function MonthlyView({ data, onWeekClick }: MonthlyViewProps) {
                 </tr>
               </thead>
               <tbody>
-                {paginatedStock.map((item) => (
-                  <tr
-                    key={item.id}
-                    className={`border-b border-border hover:bg-bg-card-alt/50 transition-colors ${
-                      item.status === 'Crítico' ? 'border-l-2 border-l-status-red' : ''
-                    }`}
-                  >
-                    <td className="py-4 px-4 text-text-primary">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">{item.emoji}</span>
-                        {item.name}
-                      </div>
-                    </td>
-                    <td className="py-4 px-4 text-right text-text-primary">{item.unitsSoldMonth}</td>
-                    <td className="py-4 px-4 text-right text-text-primary">{item.stockAvailable}</td>
-                    <td className="py-4 px-4 text-center">
-                      <StatusBadge status={item.status} />
-                    </td>
-                    <td className="py-4 px-4 text-center">
-                      <div className="relative inline-block">
-                        <button
-                          onClick={() => setOpenMenuId(openMenuId === item.id ? null : item.id)}
-                          className="p-1 hover:bg-bg-primary rounded transition-colors"
-                        >
-                          <MoreVertical className="w-4 h-4 text-text-muted" />
-                        </button>
-                        {openMenuId === item.id && (
-                          <div className="absolute right-0 mt-1 bg-bg-primary border border-border rounded-lg shadow-lg z-10 min-w-max">
-                            <button className="block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-bg-card">
-                              Ver detalle
-                            </button>
-                            <button className="block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-bg-card">
-                              Editar
-                            </button>
-                            <button className="block w-full text-left px-4 py-2 text-sm text-status-red hover:bg-bg-card">
-                              Alertar
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+{paginatedStock.map((item, index) => (
+                   <motion.tr
+                     key={item.id}
+                     custom={index}
+                     initial="hidden"
+                     animate="visible"
+                     variants={itemVariants}
+                     className={`border-b border-border hover:bg-bg-card-alt/50 transition-colors ${
+                       item.status === 'Crítico' ? 'border-l-2 border-l-status-red' : ''
+                     }`}
+                   >
+                     <td className="py-4 px-4 text-text-primary">
+                       <div className="flex items-center gap-2">
+                         <span className="text-xl">{item.emoji}</span>
+                         {item.name}
+                       </div>
+                     </td>
+                     <td className="py-4 px-4 text-right text-text-primary">{item.unitsSoldMonth}</td>
+                     <td className="py-4 px-4 text-right text-text-primary">{item.stockAvailable}</td>
+                     <td className="py-4 px-4 text-center">
+                       <StatusBadge status={item.status} />
+                     </td>
+                     <td className="py-4 px-4 text-center">
+                       <div className="relative inline-block">
+                         <button
+                           onClick={() => setOpenMenuId(openMenuId === item.id ? null : item.id)}
+                           className="p-1 hover:bg-bg-primary rounded transition-colors"
+                         >
+                           <MoreVertical className="w-4 h-4 text-text-muted" />
+                         </button>
+                         {openMenuId === item.id && (
+                           <div className="absolute right-0 mt-1 bg-bg-primary border border-border rounded-lg shadow-lg z-10 min-w-max">
+                             <button className="block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-bg-card">
+                               Ver detalle
+                             </button>
+                             <button className="block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-bg-card">
+                               Editar
+                             </button>
+                             <button className="block w-full text-left px-4 py-2 text-sm text-status-red hover:bg-bg-card">
+                               Alertar
+                             </button>
+                           </div>
+                         )}
+                       </div>
+                     </td>
+                   </motion.tr>
+                 ))}
+</tbody>
             </table>
           </div>
 
@@ -324,18 +353,24 @@ export function MonthlyView({ data, onWeekClick }: MonthlyViewProps) {
             </h4>
             <div className="space-y-2">
               {data.stockAlerts.map((alert, idx) => (
-                <div key={idx} className="flex items-center justify-between text-sm">
+                <motion.div
+                  key={idx}
+                  className="flex items-center justify-between text-sm"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.25, delay: idx * 0.05 }}
+                >
                   <span className="text-text-muted">{alert.name}</span>
                   <GoldBadge text={alert.level} variant={
                     alert.level === 'Bajo' ? 'positive' :
                     alert.level === 'Medio' ? 'neutral' : 'warning'
                   } />
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

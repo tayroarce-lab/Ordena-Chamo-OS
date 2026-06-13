@@ -9,7 +9,13 @@ import { reporteService, type ReporteResponse } from '@/services/reporteService'
 import { PERIODOS_REPORTE, type PeriodoReporte } from '@/utils/constants';
 import { toDateInputValue } from '@/utils/formatters';
 
+import { motion } from 'framer-motion';
+
+import { useAuthStore } from '@/store/authStore';
+
 export function DashboardPage() {
+  const usuario = useAuthStore((state) => state.usuario);
+
   const [reporte, setReporte] = useState<ReporteResponse | null>(null);
   const [periodo, setPeriodo] = useState<PeriodoReporte>('dia');
   const [fecha, setFecha] = useState(toDateInputValue());
@@ -37,8 +43,34 @@ export function DashboardPage() {
       .filter((e) => e.estado !== 'entregado')
       .reduce((acc, e) => acc + e.cantidad, 0) ?? 0;
 
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.35 } },
+  };
+
+  const greetingVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.35 } },
+  };
+
+  const firstName = usuario?.nombre?.split(' ')[0] ?? 'Usuario';
+
   return (
-    <div>
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      exit="hidden"
+      variants={containerVariants}
+    >
+      <motion.div
+        className="mb-4 text-lg font-semibold text-accent"
+        initial="hidden"
+        animate="visible"
+        variants={greetingVariants}
+      >
+        Bienvenido {firstName} :)
+      </motion.div>
+
       <Header
         title="Dashboard"
         subtitle="Métricas y reportes del negocio"
@@ -48,7 +80,7 @@ export function DashboardPage() {
               value={periodo}
               onChange={(e) => setPeriodo(e.target.value as PeriodoReporte)}
               className="rounded-lg border border-border-subtle bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none"
-            >
+              >
               {PERIODOS_REPORTE.map((p) => (
                 <option key={p} value={p}>
                   {p.charAt(0).toUpperCase() + p.slice(1)}
@@ -94,6 +126,7 @@ export function DashboardPage() {
           </div>
         </>
       ) : null}
-    </div>
+    </motion.div>
   );
 }
+

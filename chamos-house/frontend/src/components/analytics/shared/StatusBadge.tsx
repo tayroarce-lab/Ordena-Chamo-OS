@@ -1,3 +1,5 @@
+import { motion } from 'framer-motion';
+
 interface StatusBadgeProps {
   status: 'Bajo Stock' | 'Saludable' | 'Crítico';
 }
@@ -23,15 +25,31 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 
   const style = statusStyles[status];
 
+  const pulseVariants = {
+    animate: {
+      opacity: [1, 0.6, 1],
+      scale: [1, 1.02, 1],
+      transition: {
+        duration: 2,
+        ease: 'easeInOut' as const,
+        repeat: Infinity,
+      },
+    },
+  };
+
   return (
-    <span
+    <motion.span
       style={{
         backgroundColor: style.bg,
         borderColor: style.border,
       }}
       className={`inline-block px-2 py-1 rounded text-xs font-semibold border ${style.text}`}
+      variants={pulseVariants}
+      animate={status === 'Crítico' ? 'animate' : undefined}
     >
       {status}
-    </span>
+    </motion.span>
   );
 }
+
+

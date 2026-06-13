@@ -1,7 +1,7 @@
 import { Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/Table';
+import { Table, TableBody, TableCell, TableHead, TableHeaderCell, MotionTableRow } from '@/components/ui/Table';
 import type { Pedido } from '@/types/pedido';
 import { formatCurrency, formatDateShort, formatEstado, formatMetodoPago, formatTelefono } from '@/utils/formatters';
 
@@ -30,8 +30,8 @@ export function PedidosTable({ pedidos, onView }: PedidosTableProps) {
         <TableHeaderCell className="text-right">Acciones</TableHeaderCell>
       </TableHead>
       <TableBody>
-        {pedidos.map((pedido) => (
-          <TableRow key={pedido.id}>
+        {pedidos.map((pedido, index) => (
+          <MotionTableRow key={pedido.id} index={index} onClick={() => onView(pedido)}>
             <TableCell>
               <span className="font-mono font-semibold text-accent">#{pedido.id}</span>
             </TableCell>
@@ -56,7 +56,7 @@ export function PedidosTable({ pedidos, onView }: PedidosTableProps) {
                 <Eye className="h-4 w-4" />
               </Button>
             </TableCell>
-          </TableRow>
+          </MotionTableRow>
         ))}
       </TableBody>
     </Table>

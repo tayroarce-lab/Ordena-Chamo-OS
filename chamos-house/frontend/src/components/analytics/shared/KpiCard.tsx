@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { motion } from 'framer-motion';
+
 interface KpiCardProps {
   title: string;
   value: string | number;
@@ -8,9 +10,17 @@ interface KpiCardProps {
   footer?: React.ReactNode;
 }
 
+const hoverVariants = {
+  hover: { scale: 1.015, boxShadow: '0 4px 12px rgba(0,0,0,0.12)' },
+};
+
 export function KpiCard({ title, value, badge, icon, footer }: KpiCardProps) {
   return (
-    <div className="rounded-xl border border-border p-4 bg-bg-card">
+    <motion.div
+      className="rounded-xl border border-border p-4 bg-bg-card"
+      variants={hoverVariants}
+      whileHover="hover"
+    >
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="text-xs uppercase tracking-widest text-text-muted font-medium">
@@ -44,6 +54,6 @@ export function KpiCard({ title, value, badge, icon, footer }: KpiCardProps) {
           {footer}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

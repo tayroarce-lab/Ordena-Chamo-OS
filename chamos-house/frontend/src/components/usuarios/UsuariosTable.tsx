@@ -1,7 +1,7 @@
 import { Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/Table';
+import { Table, TableBody, TableCell, TableHead, TableHeaderCell, MotionTableRow } from '@/components/ui/Table';
 import type { Usuario } from '@/types/usuario';
 import { formatDateShort, formatTelefono } from '@/utils/formatters';
 
@@ -34,8 +34,8 @@ export function UsuariosTable({ usuarios, onEdit, onToggleActivo }: UsuariosTabl
         <TableHeaderCell className="text-right">Acciones</TableHeaderCell>
       </TableHead>
       <TableBody>
-        {usuarios.map((usuario) => (
-          <TableRow key={usuario.id}>
+        {usuarios.map((usuario, index) => (
+          <MotionTableRow key={usuario.id} index={index}>
             <TableCell className="font-medium">{usuario.nombre ?? '—'}</TableCell>
             <TableCell className="font-mono text-sm">{formatTelefono(usuario.telefono)}</TableCell>
             <TableCell>
@@ -54,7 +54,7 @@ export function UsuariosTable({ usuarios, onEdit, onToggleActivo }: UsuariosTabl
                 </Button>
               </div>
             </TableCell>
-          </TableRow>
+          </MotionTableRow>
         ))}
       </TableBody>
     </Table>

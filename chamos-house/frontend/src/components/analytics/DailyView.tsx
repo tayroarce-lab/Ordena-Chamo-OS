@@ -166,34 +166,48 @@ export function DailyView({ data, onGoToMonthly, onGoToWeek }: DailyViewProps) {
                 </tr>
               </thead>
               <tbody>
-                {data.soldProducts.map((product) => {
-                  const categoryStyle = CATEGORY_STYLES[product.category];
-                  return (
-                    <tr key={product.id} className="border-b border-border hover:bg-bg-card-alt/50 transition-colors">
-                      <td className="py-4 px-4 text-text-primary">
-                        {product.name}
-                      </td>
-                      <td className="py-4 px-4">
-                        <span
-                          style={{
-                            backgroundColor: categoryStyle.bg,
-                            color: categoryStyle.text,
-                          }}
-                          className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                        >
-                          {product.category}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 text-right text-text-primary">
-                        {product.quantity}
-                      </td>
+import { motion } from 'framer-motion';
+
+{data.soldProducts.map((product, index) => {
+                   const categoryStyle = CATEGORY_STYLES[product.category];
+                   const rowVariants = {
+                     hidden: { opacity: 0, y: -10 },
+                     visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: 'easeOut', delay: index * 0.05 } },
+                   };
+                   return (
+                     <motion.tr
+                       key={product.id}
+                       className="border-b border-border hover:bg-bg-card-alt/50"
+                       variants={rowVariants}
+                       initial="hidden"
+                       animate="visible"
+                       whileHover={{ scale: 1.015, boxShadow: '0 4px 8px rgba(0,0,0,0.08)' }}
+                       transition={{ type: 'spring', stiffness: 100, damping: 14 }}
+                     >
+                       <td className="py-4 px-4 text-text-primary">
+                         {product.name}
+                       </td>
+                       <td className="py-4 px-4">
+                         <span
+                           style={{
+                             backgroundColor: categoryStyle.bg,
+                             color: categoryStyle.text,
+                           }}
+                           className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                         >
+                           {product.category}
+                         </span>
+                       </td>
+                       <td className="py-4 px-4 text-right text-text-primary">
+                         {product.quantity}
+                       </td>
                       <td className="py-4 px-4 text-right text-text-muted">
                         ${product.unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </td>
                       <td className="py-4 px-4 text-right text-accent-gold font-semibold">
                         ${product.totalGenerated.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </td>
-                    </tr>
+</motion.tr>
                   );
                 })}
               </tbody>
