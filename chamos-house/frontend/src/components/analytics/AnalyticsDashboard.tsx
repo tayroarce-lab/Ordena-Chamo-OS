@@ -3,21 +3,21 @@ import { useDrillDown } from '@/hooks/useDrillDown';
 import { MonthlyView } from './MonthlyView';
 import { WeeklyView } from './WeeklyView';
 import { DailyView } from './DailyView';
+import { AnimatePresence, motion } from 'framer-motion';
 
 /**
  * AnalyticsDashboard
- * 
+ *
  * Componente orquestador que gestiona la navegación drill-down entre
  * vistas mensuales, semanales y diarias. Usa useDrillDown para mantener
  * el estado de navegación y renderiza la vista correcta según el estado actual.
- * 
+ *
  * TODO: Conectar con API real cuando esté disponible.
  * Endpoints esperados:
  * - GET /api/analytics/monthly?year=2025&month=7
  * - GET /api/analytics/weekly?year=2025&month=7&week=2
  * - GET /api/analytics/daily?date=2025-07-15
  */
-import { AnimatePresence, motion } from 'framer-motion';
 
 export function AnalyticsDashboard() {
   const { state, goToMonthly, goToWeek, goToDay } = useDrillDown();
@@ -29,7 +29,7 @@ export function AnalyticsDashboard() {
   };
 
   return (
-    <div style={{ background: 'var(--bg-primary)', minHeight: '100vh', position: 'relative' }}>
+    <div className="bg-bg-primary min-h-screen relative">
       <AnimatePresence mode="wait">
         {state.view === 'monthly' && (
           <motion.div
@@ -38,7 +38,7 @@ export function AnalyticsDashboard() {
             animate="in"
             exit="out"
             variants={pageVariants}
-            style={{ position: 'absolute', width: '100%' }}
+            className="absolute w-full"
           >
             <MonthlyView
               data={MONTHLY_MOCK}
@@ -54,7 +54,7 @@ export function AnalyticsDashboard() {
             animate="in"
             exit="out"
             variants={pageVariants}
-            style={{ position: 'absolute', width: '100%' }}
+            className="absolute w-full"
           >
             <WeeklyView
               data={WEEKLY_MOCK}
@@ -72,7 +72,7 @@ export function AnalyticsDashboard() {
             animate="in"
             exit="out"
             variants={pageVariants}
-            style={{ position: 'absolute', width: '100%' }}
+            className="absolute w-full"
           >
             <DailyView
               data={DAILY_MOCK}

@@ -3,34 +3,28 @@ interface GoldBadgeProps {
   variant?: 'positive' | 'neutral' | 'warning';
 }
 
+/**
+ * GoldBadge
+ *
+ * Usa clases de Tailwind con opacidad (bg-amber-500/15, border-amber-500/30, etc.)
+ * para evitar style={{}} con colores rgba. Mapeo de variantes:
+ * - positive → dorado/ámbar (accent-gold)
+ * - neutral  → gris
+ * - warning  → rojo
+ */
+const VARIANT_CLASSES: Record<
+  NonNullable<GoldBadgeProps['variant']>,
+  string
+> = {
+  positive: 'bg-amber-500/15 border-amber-500/30 text-accent-gold',
+  neutral:  'bg-gray-400/15 border-gray-400/30 text-text-muted',
+  warning:  'bg-red-500/15 border-red-500/30 text-red-400',
+};
+
 export function GoldBadge({ text, variant = 'positive' }: GoldBadgeProps) {
-  const variants = {
-    positive: {
-      bg: 'rgba(245,158,11,0.15)',
-      border: 'rgba(245,158,11,0.3)',
-      text: 'text-accent-gold',
-    },
-    neutral: {
-      bg: 'rgba(156, 163, 175, 0.15)',
-      border: 'rgba(156, 163, 175, 0.3)',
-      text: 'text-text-muted',
-    },
-    warning: {
-      bg: 'rgba(239, 68, 68, 0.15)',
-      border: 'rgba(239, 68, 68, 0.3)',
-      text: 'text-red-400',
-    },
-  };
-
-  const variantStyle = variants[variant];
-
   return (
     <span
-      style={{
-        backgroundColor: variantStyle.bg,
-        borderColor: variantStyle.border,
-      }}
-      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${variantStyle.text}`}
+      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${VARIANT_CLASSES[variant]}`}
     >
       {text}
     </span>

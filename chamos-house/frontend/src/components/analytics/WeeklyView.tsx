@@ -97,7 +97,9 @@ export function WeeklyView({ data, onDayClick, onGoToMonthly, weekNumber }: Week
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={chartData} margin={{ top: 20, right: 10, left: 0, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="0" stroke="var(--border)" vertical={false} />
+                {/* style en XAxis es API de recharts — no reemplazable con Tailwind */}
                 <XAxis dataKey="day" stroke="var(--text-muted)" style={{ fontSize: '12px' }} />
+                {/* contentStyle / labelStyle son props de recharts — no reemplazables con Tailwind */}
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'var(--bg-card-alt)',
@@ -111,7 +113,7 @@ export function WeeklyView({ data, onDayClick, onGoToMonthly, weekNumber }: Week
                   dataKey="income"
                   radius={[8, 8, 0, 0]}
                   onClick={(data) => handleDayClick(data.dayIndex)}
-                  style={{ cursor: 'pointer' }}
+                  className="cursor-pointer"
                 >
                   {chartData.map((entry, index) => (
                     <Cell

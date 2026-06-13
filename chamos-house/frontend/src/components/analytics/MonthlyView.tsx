@@ -116,7 +116,9 @@ export function MonthlyView({ data, onWeekClick }: MonthlyViewProps) {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={chartData} margin={{ top: 20, right: 10, left: 0, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="0" stroke="var(--border)" vertical={false} />
+                {/* style en XAxis es API de recharts — no reemplazable con Tailwind */}
                 <XAxis dataKey="label" stroke="var(--text-muted)" style={{ fontSize: '12px' }} />
+                {/* contentStyle / labelStyle son props de recharts — no reemplazables con Tailwind */}
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'var(--bg-card-alt)',
@@ -131,14 +133,14 @@ export function MonthlyView({ data, onWeekClick }: MonthlyViewProps) {
                   fill="var(--accent-gold)"
                   radius={[8, 8, 0, 0]}
                   onClick={(data) => handleWeekClick(data.weekIndex)}
-                  style={{ cursor: 'pointer' }}
+                  className="cursor-pointer"
                 />
                 <Bar
                   dataKey="projected"
                   fill="#4b3a1f"
                   radius={[8, 8, 0, 0]}
                   onClick={(data) => handleWeekClick(data.weekIndex)}
-                  style={{ cursor: 'pointer' }}
+                  className="cursor-pointer"
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -148,7 +150,8 @@ export function MonthlyView({ data, onWeekClick }: MonthlyViewProps) {
                 <span className="text-text-muted">Real</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#4b3a1f' }} />
+                {/* bg-chart-projected es el token #4b3a1f definido en tailwind.config.ts */}
+                <div className="w-3 h-3 rounded-sm bg-chart-projected" />
                 <span className="text-text-muted">Proyectado</span>
               </div>
             </div>
@@ -221,54 +224,54 @@ export function MonthlyView({ data, onWeekClick }: MonthlyViewProps) {
                 </tr>
               </thead>
               <tbody>
-{paginatedStock.map((item, index) => (
-                   <motion.tr
-                     key={item.id}
-                     custom={index}
-                     initial="hidden"
-                     animate="visible"
-                     variants={itemVariants}
-                     className={`border-b border-border hover:bg-bg-card-alt/50 transition-colors ${
-                       item.status === 'Crítico' ? 'border-l-2 border-l-status-red' : ''
-                     }`}
-                   >
-                     <td className="py-4 px-4 text-text-primary">
-                       <div className="flex items-center gap-2">
-                         <span className="text-xl">{item.emoji}</span>
-                         {item.name}
-                       </div>
-                     </td>
-                     <td className="py-4 px-4 text-right text-text-primary">{item.unitsSoldMonth}</td>
-                     <td className="py-4 px-4 text-right text-text-primary">{item.stockAvailable}</td>
-                     <td className="py-4 px-4 text-center">
-                       <StatusBadge status={item.status} />
-                     </td>
-                     <td className="py-4 px-4 text-center">
-                       <div className="relative inline-block">
-                         <button
-                           onClick={() => setOpenMenuId(openMenuId === item.id ? null : item.id)}
-                           className="p-1 hover:bg-bg-primary rounded transition-colors"
-                         >
-                           <MoreVertical className="w-4 h-4 text-text-muted" />
-                         </button>
-                         {openMenuId === item.id && (
-                           <div className="absolute right-0 mt-1 bg-bg-primary border border-border rounded-lg shadow-lg z-10 min-w-max">
-                             <button className="block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-bg-card">
-                               Ver detalle
-                             </button>
-                             <button className="block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-bg-card">
-                               Editar
-                             </button>
-                             <button className="block w-full text-left px-4 py-2 text-sm text-status-red hover:bg-bg-card">
-                               Alertar
-                             </button>
-                           </div>
-                         )}
-                       </div>
-                     </td>
-                   </motion.tr>
-                 ))}
-</tbody>
+                {paginatedStock.map((item, index) => (
+                  <motion.tr
+                    key={item.id}
+                    custom={index}
+                    initial="hidden"
+                    animate="visible"
+                    variants={itemVariants}
+                    className={`border-b border-border hover:bg-bg-card-alt/50 transition-colors ${
+                      item.status === 'Crítico' ? 'border-l-2 border-l-status-red' : ''
+                    }`}
+                  >
+                    <td className="py-4 px-4 text-text-primary">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">{item.emoji}</span>
+                        {item.name}
+                      </div>
+                    </td>
+                    <td className="py-4 px-4 text-right text-text-primary">{item.unitsSoldMonth}</td>
+                    <td className="py-4 px-4 text-right text-text-primary">{item.stockAvailable}</td>
+                    <td className="py-4 px-4 text-center">
+                      <StatusBadge status={item.status} />
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <div className="relative inline-block">
+                        <button
+                          onClick={() => setOpenMenuId(openMenuId === item.id ? null : item.id)}
+                          className="p-1 hover:bg-bg-primary rounded transition-colors"
+                        >
+                          <MoreVertical className="w-4 h-4 text-text-muted" />
+                        </button>
+                        {openMenuId === item.id && (
+                          <div className="absolute right-0 mt-1 bg-bg-primary border border-border rounded-lg shadow-lg z-10 min-w-max">
+                            <button className="block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-bg-card">
+                              Ver detalle
+                            </button>
+                            <button className="block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-bg-card">
+                              Editar
+                            </button>
+                            <button className="block w-full text-left px-4 py-2 text-sm text-status-red hover:bg-bg-card">
+                              Alertar
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
             </table>
           </div>
 
@@ -308,6 +311,7 @@ export function MonthlyView({ data, onWeekClick }: MonthlyViewProps) {
 
         {/* Bottom Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {/* Estado de Cocina */}
           <div className="bg-bg-card border border-border rounded-xl p-6">
             <h4 className="text-xs uppercase tracking-widest text-text-muted font-semibold mb-4">
               Estado de Cocina
@@ -320,11 +324,10 @@ export function MonthlyView({ data, onWeekClick }: MonthlyViewProps) {
                 </span>
               </div>
               <div className="w-full bg-bg-primary rounded-full h-2">
+                {/* width es dinámico (valor calculado en JS) — style es necesario aquí */}
                 <div
-                  className="bg-accent-gold h-2 rounded-full"
-                  style={{
-                    width: `${data.kitchenStatus.capacityPercent}%`,
-                  }}
+                  className="bg-accent-gold h-2 rounded-full transition-all"
+                  style={{ width: `${data.kitchenStatus.capacityPercent}%` }}
                 />
               </div>
               <p className="text-xs text-text-muted mt-2">
@@ -333,6 +336,7 @@ export function MonthlyView({ data, onWeekClick }: MonthlyViewProps) {
             </div>
           </div>
 
+          {/* Tiempo Promedio */}
           <div className="bg-bg-card border border-border rounded-xl p-6">
             <h4 className="text-xs uppercase tracking-widest text-text-muted font-semibold mb-4">
               Tiempo Promedio
@@ -347,6 +351,7 @@ export function MonthlyView({ data, onWeekClick }: MonthlyViewProps) {
             </p>
           </div>
 
+          {/* Alertas de Stock */}
           <div className="bg-bg-card border border-border rounded-xl p-6">
             <h4 className="text-xs uppercase tracking-widest text-text-muted font-semibold mb-4">
               Alertas de Stock

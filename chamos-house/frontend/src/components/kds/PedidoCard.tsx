@@ -47,7 +47,7 @@ export function PedidoCard({ pedido, index, onCambiarEstado }: PedidoCardProps) 
   const elapsed = useTickingTime(pedido.f_creacion);
   const siguienteEstado = TRANSICIONES_ESTADO[pedido.estado];
   const isUrgent = elapsed.includes('h') || parseInt(elapsed, 10) >= 15;
-
+  // El style prop es requerido por la API de @hello-pangea/dnd para drag-and-drop — no reemplazable con Tailwind
   return (
     <Draggable draggableId={pedido.id.toString()} index={index}>
       {(provided, snapshot) => (

@@ -1,4 +1,5 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { motion } from 'framer-motion';
 import type { DailyData } from '@/types/analytics.types';
 import { KpiCard } from './shared/KpiCard';
 import { Breadcrumbs } from './shared/Breadcrumbs';
@@ -9,12 +10,20 @@ interface DailyViewProps {
   onGoToWeek: (weekNumber: number) => void;
 }
 
-const CATEGORY_STYLES: Record<string, { bg: string; text: string }> = {
-  'Burgers': { bg: '#7f1d1d', text: '#fca5a5' },
-  'Acompañantes': { bg: '#14532d', text: '#86efac' },
-  'Bebidas': { bg: '#1e3a5f', text: '#93c5fd' },
-  'Combos': { bg: '#431407', text: '#fdba74' },
+/**
+ * Estilos de categorías de producto.
+ * Se usan clases Tailwind personalizadas definidas en tailwind.config.ts
+ * para bg y text de cada categoría.
+ */
+const CATEGORY_CLASSES: Record<string, { bg: string; text: string }> = {
+  'Burgers':       { bg: 'bg-cat-burger-bg', text: 'text-cat-burger-text' },
+  'Acompañantes':  { bg: 'bg-cat-side-bg',   text: 'text-cat-side-text' },
+  'Bebidas':       { bg: 'bg-cat-drink-bg',  text: 'text-cat-drink-text' },
+  'Combos':        { bg: 'bg-cat-combo-bg',  text: 'text-cat-combo-text' },
 };
+
+/** Fallback para categorías no mapeadas */
+const DEFAULT_CATEGORY_CLASSES = { bg: 'bg-elevated', text: 'text-text-secondary' };
 
 export function DailyView({ data, onGoToMonthly, onGoToWeek }: DailyViewProps) {
   const breadcrumbs = [
@@ -30,7 +39,6 @@ export function DailyView({ data, onGoToMonthly, onGoToWeek }: DailyViewProps) {
   }));
 
   const deliveryPercentage = (data.deliveredOrders / data.totalOrders) * 100;
-  const cancelPercentage = (data.canceledOrders / data.totalOrders) * 100;
 
   return (
     <div className="min-h-screen overflow-y-auto bg-bg-primary p-6">
@@ -51,28 +59,20 @@ export function DailyView({ data, onGoToMonthly, onGoToWeek }: DailyViewProps) {
             value={`$${data.dailyIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
             badge={{ text: `+${data.incomeGrowthPercent}%`, color: 'positive' }}
           />
+
+          {/* Pedidos Card */}
           <div className="bg-bg-card border border-border rounded-xl p-4">
             <h3 className="text-xs uppercase tracking-widest text-text-muted font-medium mb-3">
               Pedidos Total
             </h3>
             <p className="text-3xl font-bold text-text-primary mb-3">{data.totalOrders}</p>
             <div className="space-y-1">
-              <div className="flex items-center gap-2">
+              {/* Barra de progreso — el ancho es dinámico (calculado en JS), style es necesario */}
+              <div className="h-2 rounded-full w-full bg-chart-bar-bg">
                 <div
-                  className="h-2 rounded-full flex-1"
-                  style={{
-                    backgroundColor: '#3d4575',
-                    width: '100%',
-                  }}
-                >
-                  <div
-                    className="h-2 rounded-full"
-                    style={{
-                      backgroundColor: '#3b82f6',
-                      width: `${deliveryPercentage}%`,
-                    }}
-                  />
-                </div>
+                  className="h-2 rounded-full bg-chart-delivery"
+                  style={{ width: `${deliveryPercentage}%` }}
+                />
               </div>
               <div className="flex gap-3 text-xs">
                 <span className="text-blue-400">● {data.deliveredOrders} Entregados</span>
@@ -80,10 +80,13 @@ export function DailyView({ data, onGoToMonthly, onGoToWeek }: DailyViewProps) {
               </div>
             </div>
           </div>
+
           <KpiCard
             title="Ticket Promedio"
             value={`$${data.avgTicket.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
           />
+
+          {/* Producto Estrella Card */}
           <div className="bg-bg-card border border-border rounded-xl p-4">
             <h3 className="text-xs uppercase tracking-widest text-text-muted font-medium mb-3">
               Producto Estrella
@@ -101,6 +104,10 @@ export function DailyView({ data, onGoToMonthly, onGoToWeek }: DailyViewProps) {
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={chartData} margin={{ top: 20, right: 10, left: 0, bottom: 20 }}>
               <CartesianGrid strokeDasharray="0" stroke="var(--border)" vertical={false} />
+              {/*
+                El prop `style` en XAxis es la API de recharts para estilos SVG internos;
+                no se puede reemplazar con clases de Tailwind.
+              */}
               <XAxis
                 dataKey="hour"
                 stroke="var(--text-muted)"
@@ -117,6 +124,10 @@ export function DailyView({ data, onGoToMonthly, onGoToWeek }: DailyViewProps) {
                   return null;
                 }}
               />
+              {/*
+                contentStyle / labelStyle son props de la API de recharts,
+                no se pueden reemplazar con clases de Tailwind.
+              */}
               <Tooltip
                 contentStyle={{
                   backgroundColor: 'var(--bg-card-alt)',
@@ -166,48 +177,42 @@ export function DailyView({ data, onGoToMonthly, onGoToWeek }: DailyViewProps) {
                 </tr>
               </thead>
               <tbody>
-import { motion } from 'framer-motion';
-
-{data.soldProducts.map((product, index) => {
-                   const categoryStyle = CATEGORY_STYLES[product.category];
-                   const rowVariants = {
-                     hidden: { opacity: 0, y: -10 },
-                     visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: 'easeOut', delay: index * 0.05 } },
-                   };
-                   return (
-                     <motion.tr
-                       key={product.id}
-                       className="border-b border-border hover:bg-bg-card-alt/50"
-                       variants={rowVariants}
-                       initial="hidden"
-                       animate="visible"
-                       whileHover={{ scale: 1.015, boxShadow: '0 4px 8px rgba(0,0,0,0.08)' }}
-                       transition={{ type: 'spring', stiffness: 100, damping: 14 }}
-                     >
-                       <td className="py-4 px-4 text-text-primary">
-                         {product.name}
-                       </td>
-                       <td className="py-4 px-4">
-                         <span
-                           style={{
-                             backgroundColor: categoryStyle.bg,
-                             color: categoryStyle.text,
-                           }}
-                           className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                         >
-                           {product.category}
-                         </span>
-                       </td>
-                       <td className="py-4 px-4 text-right text-text-primary">
-                         {product.quantity}
-                       </td>
+                {data.soldProducts.map((product, index) => {
+                  const categoryClasses = CATEGORY_CLASSES[product.category] ?? DEFAULT_CATEGORY_CLASSES;
+                  const rowVariants = {
+                    hidden: { opacity: 0, y: -10 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      transition: { duration: 0.25, ease: 'easeOut', delay: index * 0.05 },
+                    },
+                  };
+                  return (
+                    <motion.tr
+                      key={product.id}
+                      className="border-b border-border hover:bg-bg-card-alt/50"
+                      variants={rowVariants}
+                      initial="hidden"
+                      animate="visible"
+                      whileHover={{ scale: 1.015, boxShadow: '0 4px 8px rgba(0,0,0,0.08)' }}
+                      transition={{ type: 'spring', stiffness: 100, damping: 14 }}
+                    >
+                      <td className="py-4 px-4 text-text-primary">{product.name}</td>
+                      <td className="py-4 px-4">
+                        <span
+                          className={`inline-block px-2 py-1 rounded text-xs font-semibold ${categoryClasses.bg} ${categoryClasses.text}`}
+                        >
+                          {product.category}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-right text-text-primary">{product.quantity}</td>
                       <td className="py-4 px-4 text-right text-text-muted">
                         ${product.unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </td>
                       <td className="py-4 px-4 text-right text-accent-gold font-semibold">
                         ${product.totalGenerated.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </td>
-</motion.tr>
+                    </motion.tr>
                   );
                 })}
               </tbody>
