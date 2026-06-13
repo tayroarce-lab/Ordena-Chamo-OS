@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { motion } from 'framer-motion';
 import type { DailyData } from '@/types/analytics.types';
 import { KpiCard } from './shared/KpiCard';
@@ -121,7 +121,8 @@ export function DailyView({ data, onGoToMonthly, onGoToWeek }: DailyViewProps) {
                       </text>
                     );
                   }
-                  return null;
+                  // Retorna un elemento SVG vacío en lugar de null para satisfacer el tipo ReactElement
+                  return <g />;
                 }}
               />
               {/*
@@ -184,7 +185,8 @@ export function DailyView({ data, onGoToMonthly, onGoToWeek }: DailyViewProps) {
                     visible: {
                       opacity: 1,
                       y: 0,
-                      transition: { duration: 0.25, ease: 'easeOut', delay: index * 0.05 },
+                      // 'as const' permite que TS infiera el literal exacto que framer-motion espera (Easing)
+                      transition: { duration: 0.25, ease: 'easeOut' as const, delay: index * 0.05 },
                     },
                   };
                   return (

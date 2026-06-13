@@ -5,66 +5,15 @@ import { Usuario, Producto } from '../models';
 import { logger } from '../utils/logger';
 
 const PRODUCTOS_SEED = [
-  {
-    nombre: 'Hamburguesa Clásica',
-    descripcion: 'Carne 100g, lechuga, tomate y salsa especial',
-    precio: 3500,
-    categoria: 'hamburguesas',
-  },
-  {
-    nombre: 'Hamburguesa Doble',
-    descripcion: 'Doble carne, queso cheddar y bacon',
-    precio: 5200,
-    categoria: 'hamburguesas',
-  },
-  {
-    nombre: 'Hamburguesa BBQ',
-    descripcion: 'Carne, cebolla caramelizada y salsa BBQ',
-    precio: 4800,
-    categoria: 'hamburguesas',
-  },
-  {
-    nombre: 'Combo Familiar',
-    descripcion: '4 hamburguesas clásicas + 4 papas + 4 bebidas',
-    precio: 14500,
-    categoria: 'combos',
-  },
-  {
-    nombre: 'Combo Personal',
-    descripcion: 'Hamburguesa clásica + papas + bebida',
-    precio: 5500,
-    categoria: 'combos',
-  },
-  {
-    nombre: 'Refresco de Cola',
-    descripcion: '500ml',
-    precio: 1200,
-    categoria: 'bebidas',
-  },
-  {
-    nombre: 'Limonada Natural',
-    descripcion: '500ml',
-    precio: 1500,
-    categoria: 'bebidas',
-  },
-  {
-    nombre: 'Milkshake Vainilla',
-    descripcion: '400ml',
-    precio: 2200,
-    categoria: 'bebidas',
-  },
-  {
-    nombre: 'Papas Fritas',
-    descripcion: 'Porción regular',
-    precio: 1500,
-    categoria: 'acompañamientos',
-  },
-  {
-    nombre: 'Aros de Cebolla',
-    descripcion: '8 unidades',
-    precio: 1800,
-    categoria: 'acompañamientos',
-  },
+  // ── Papas ────────────────────────────────────────────────────────────
+  { nombre: 'Papas chamo',      descripcion: null, precio: 3500, categoria: 'papas' },
+  { nombre: 'Papas Mega Chamo', descripcion: null, precio: 4500, categoria: 'papas' },
+  { nombre: 'Orden de papas',   descripcion: null, precio: 1500, categoria: 'papas' },
+  { nombre: 'Papicarne',        descripcion: null, precio: 2500, categoria: 'papas' },
+  { nombre: 'Salchipapa',       descripcion: null, precio: 2000, categoria: 'papas' },
+  { nombre: 'Salchipapicarne',  descripcion: null, precio: 3000, categoria: 'papas' },
+  // ── Tequeños ─────────────────────────────────────────────────────────
+  { nombre: 'Tequeños',         descripcion: null, precio: 2500, categoria: 'tequeños' },
 ];
 
 async function seed(): Promise<void> {
@@ -95,15 +44,13 @@ async function seed(): Promise<void> {
       logger.info('Usuarios ya existen, omitiendo creación');
     }
 
-    const productosCount = await Producto.unscoped().count();
-    if (productosCount === 0) {
-      await Producto.bulkCreate(
-        PRODUCTOS_SEED.map((p) => ({ ...p, disponible: true }))
-      );
-      logger.info('10 productos de muestra creados');
-    } else {
-      logger.info('Productos ya existen, omitiendo creación');
-    }
+    // Limpia todos los productos (force:true evita restricciones de softDelete si las hubiera)
+    // DELETE sin TRUNCATE para respetar las FK de detalle_pedidos
+    await Producto.unscoped().destroy({ where: {}, force: true });
+    await Producto.bulkCreate(
+      PRODUCTOS_SEED.map((p) => ({ ...p, disponible: true }))
+    );
+    logger.info(`${PRODUCTOS_SEED.length} productos cargados en la base de datos`);
 
     logger.info('Seed completado exitosamente');
     process.exit(0);

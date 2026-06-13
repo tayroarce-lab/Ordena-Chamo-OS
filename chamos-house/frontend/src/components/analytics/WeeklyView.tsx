@@ -1,8 +1,7 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Brain } from 'lucide-react';
 import type { WeeklyData } from '@/types/analytics.types';
 import { KpiCard } from './shared/KpiCard';
-import { GoldBadge } from './shared/GoldBadge';
 import { Breadcrumbs } from './shared/Breadcrumbs';
 
 interface WeeklyViewProps {
@@ -25,7 +24,8 @@ export function WeeklyView({ data, onDayClick, onGoToMonthly, weekNumber }: Week
 
   const handleDayClick = (dayIndex: number) => {
     const dayAbbr = data.dailyChart[dayIndex]?.day;
-    const dayNumber = dayAbbr ? DAY_INDEX_MAP[dayAbbr] : dayIndex + 1;
+    // DAY_INDEX_MAP puede retornar undefined si la clave no existe — el ?? garantiza que siempre sea number
+    const dayNumber = (dayAbbr ? DAY_INDEX_MAP[dayAbbr] : undefined) ?? dayIndex + 1;
     onDayClick(dayNumber);
   };
 
