@@ -1,334 +1,166 @@
-# 🍔 Chamos House — Sistema de Gestión de Restaurante
+# Chamos House
 
-Sistema fullstack para gestión de pedidos de restaurante de comida rápida. Incluye un flujo de pedidos vía webhook (integrable con n8n/WhatsApp), panel de cocina en tiempo real (**KDS** con drag & drop), gestión de productos y usuarios, y reportes financieros.
+> **A complete digital management system for fast-food restaurants to handle orders, kitchen displays, and financial reports.**
 
----
-
-## 📐 Arquitectura
-
-```
-chamos-house/
-├── backend/     # API REST + WebSockets (Node.js, Express, Sequelize, MySQL)
-└── frontend/    # SPA React + Vite (TypeScript, TailwindCSS, Zustand)
-```
-
-### Stack tecnológico
-
-| Capa       | Tecnología                                                  |
-|------------|-------------------------------------------------------------|
-| Backend    | Node.js 20+, Express 4, TypeScript, Sequelize 6, Socket.io  |
-| Base de datos | MySQL 8                                                  |
-| Frontend   | React 18, Vite, TypeScript, TailwindCSS 3, Zustand, Recharts|
-| DnD        | @hello-pangea/dnd                                           |
-| Auth       | JWT (access token en cookie httpOnly)                       |
-| Tiempo real| Socket.io (namespace `/cocina`)                             |
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white)](#)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=node.js&logoColor=white)](#)
+[![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)](#)
+[![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=flat-square&logo=mysql&logoColor=white)](#)
+[![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=flat-square&logo=socket.io&logoColor=white)](#)
+[![n8n](https://img.shields.io/badge/n8n-FF6600?style=flat-square&logo=n8n&logoColor=white)](#)
 
 ---
 
-## ✅ Requisitos previos
+## The Problem
 
-- **Node.js** 20 o superior → https://nodejs.org
-- **MySQL** 8 corriendo localmente (o en Docker)
-- **npm** 10+ (incluido con Node.js)
-- Git
+Fast-food restaurants (like burger joints) often rely on manual paper notes for taking orders and manual calculations for end-of-day cash closing. This leads to human errors, lost orders, lack of real-time visibility for the kitchen staff, and inaccurate financial reports. Existing solutions are either too complex, expensive, or don't integrate well with direct customer channels like WhatsApp.
+
+## The Solution
+
+Chamos House digitizes the entire order flow, from the moment a customer messages on WhatsApp to the final delivery and financial closing. It provides an automated intake via webhooks, a real-time Kitchen Display System (KDS) for cooks to manage orders visually, and an administrative dashboard for tracking sales and best-selling products.
 
 ---
 
-## 🚀 Instalación y puesta en marcha
+## Architecture
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│   WhatsApp ──→ n8n Workflow ──→ Webhook (Express API)       │
+│                                           │                 │
+│                                           ↓                 │
+│   Client (React/Vite KDS)  ←── Socket.io  +  MySQL DB       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 
-### 1. Clonar el repositorio
+The customer interacts with a chatbot (via n8n), which sends a webhook to the Node.js API. The API validates the order, saves it atomically in the MySQL database, and emits a real-time event via Socket.io. The React frontend (KDS) listens to this event and instantly updates the kitchen's Kanban board without refreshing.
+
+---
+
+## Tech Stack
+
+| Layer | Technology | Reason |
+|---|---|---|
+| Frontend | React + Vite + TypeScript + TailwindCSS | Fast development, strong typing, and easy state management (Zustand) for the real-time KDS. |
+| Backend | Node.js + Express | Lightweight, fast, and native support for JavaScript/TypeScript and WebSockets. |
+| Database | MySQL + Sequelize | Relational integrity for order details, robust transactions for financial data. |
+| Realtime | Socket.io | Reliable bidirectional communication for the kitchen display board. |
+| Automation | n8n | Easy integration with WhatsApp Business and other external APIs. |
+
+> **Design decisions worth noting:**  
+> — **Strict Layered Architecture (Routes → Controller → Service → Model)** to decouple business logic from HTTP transport, making it easier to test and maintain.
+> — **Historical Data Integrity:** The `detalle_pedidos` table stores the exact product price at the time of purchase (`p_unitario`) to prevent past financial reports from changing if a product's price is updated in the future.
+
+---
+
+## Key Features
+
+- **Automated Order Intake** — Receives structured orders directly from chatbots (like WhatsApp via n8n) and processes them instantly.
+- **Real-Time Kitchen Display System (KDS)** — A live Kanban board for cooks with drag-and-drop functionality to move orders through stages (`pendiente` → `en_proceso` → `listo` → `entregado`).
+- **Financial & Operational Reporting** — Generates end-of-day reports including total revenue by payment method and top-selling products.
+- **Menu & User Management** — Full CRUD for products (with availability toggles) and staff roles (Admin/Kitchen).
+
+---
+
+## Getting Started
+
+### Prerequisites
 
 ```bash
+node >= 20
+mysql >= 8
+npm >= 10
+```
+
+### Installation
+
+```bash
+# Clone the repository
 git clone https://github.com/tayroarce-lab/chamos_FastFlow-OS.git
 cd chamos_FastFlow-OS/chamos-house
-```
 
-### 2. Configurar el backend
-
-```bash
+# Setup Backend
 cd backend
-cp ../.\env.example .env
-```
-
-Edita `backend/.env` con tus credenciales:
-
-```env
-NODE_ENV=development
-PORT=3001
-
-# MySQL
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=chamos_house
-DB_USER=root
-DB_PASSWORD=tu_password_aqui
-DB_POOL_MAX=10
-DB_POOL_MIN=2
-
-# JWT — genera un string aleatorio de 64 chars
-JWT_SECRET=CAMBIA_ESTE_VALOR_POR_UNO_LARGO_Y_ALEATORIO
-JWT_EXPIRES_IN=8h
-JWT_REFRESH_EXPIRES_IN=7d
-
-# CORS
-FRONTEND_URL=http://localhost:5173
-
-# Webhook (para n8n o llamadas externas)
-WEBHOOK_SECRET=CAMBIA_ESTE_WEBHOOK_SECRET
-
-# Rate limiting
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX=100
-```
-
-#### Crear la base de datos en MySQL
-
-```sql
-CREATE DATABASE chamos_house CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-#### Instalar dependencias y ejecutar seeders
-
-```bash
 npm install
-npm run seed   # Crea las tablas y carga datos iniciales (admin, cocina, productos de ejemplo)
-npm run dev    # Inicia el servidor en http://localhost:3001
-```
+cp ../.env.example .env
+# Edit .env with your database credentials (DB_USER, DB_PASSWORD, etc.)
 
----
+# Create the database in MySQL:
+# CREATE DATABASE chamos_house CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-### 3. Configurar el frontend
+# Run migrations and seed data
+npm run seed
 
-```bash
+# Start backend server
+npm run dev
+
+# Setup Frontend (in a new terminal)
 cd ../frontend
-```
-
-Crea el archivo `frontend/.env`:
-
-```env
-VITE_API_URL=http://localhost:3001
-```
-
-```bash
 npm install
-npm run dev   # Inicia la app en http://localhost:5173
+# Create frontend/.env and add: VITE_API_URL=http://localhost:3001
+npm run dev
 ```
 
----
+### Environment Variables
 
-## 🔑 Credenciales iniciales (generadas por el seeder)
-
-| Rol    | Teléfono      | Contraseña  | Acceso                        |
-|--------|---------------|-------------|-------------------------------|
-| Admin  | 00000000000   | Admin123!   | Todas las rutas               |
-| Cocina | 11111111111   | Cocina123!  | Solo `/cocina` (KDS)          |
-
----
-
-## 🗂 Funcionalidades principales
-
-### 👨‍🍳 Cocina — KDS (`/cocina`)
-- Tablero Kanban en tiempo real con 4 columnas: **Pendiente → En proceso → Listo → Entregado**
-- **Drag & Drop** en toda la tarjeta para cambiar el estado de un pedido
-- Botones de avance (→) y **retroceso (←)** por estado
-- Crear pedido manual directamente desde cocina
-- Conexión vía **WebSocket** para recibir nuevos pedidos en tiempo real
-- Indicador de tiempo transcurrido por pedido (urgente si ≥ 15 min)
-
-### 📋 Pedidos (`/pedidos`)
-- Tabla de historial con paginación
-- Filtros por estado, método de pago y rango de fechas
-- Ver detalle de cada pedido
-- Crear pedido manual
-
-### 📦 Productos (`/productos`)
-- CRUD completo de productos
-- Toggle de disponibilidad
-- Categorías personalizadas
-
-### 👥 Usuarios (`/usuarios`)
-- Gestión de usuarios del staff (admin / cocina)
-- Solo visible para el rol `admin`
-
-### 📊 Dashboard (`/dashboard`)
-- Reportes de ventas por período (día / semana / mes)
-- Gráficos con Recharts
+**Backend (`backend/.env`)**
+| Variable | Description | Required |
+|---|---|---|
+| `DB_NAME` | MySQL database name (`chamos_house`) | ✅ |
+| `DB_USER` / `DB_PASSWORD` | MySQL credentials | ✅ |
+| `JWT_SECRET` | Secret for token signing | ✅ |
+| `WEBHOOK_SECRET` | Secret for verifying external requests (e.g. from n8n) | ✅ |
+| `PORT` | API server port (default: 3001) | ❌ |
 
 ---
 
-## 🔌 API REST — Referencia rápida
+## API Reference
 
 Base URL: `http://localhost:3001/api`
 
-### Autenticación
+POST   `/api/auth/login`          Authenticate user, returns JWT
 
-| Método | Ruta           | Descripción              | Auth |
-|--------|----------------|--------------------------|------|
-| POST   | `/auth/login`  | Login, retorna JWT       | No   |
-| GET    | `/auth/me`     | Obtener usuario actual   | Sí   |
-| POST   | `/auth/logout` | Cerrar sesión            | Sí   |
+POST   `/api/webhooks/pedido`     Create order via webhook (requires `X-Webhook-Secret`)
 
-### Pedidos
+GET    `/api/pedidos`             List all orders (with pagination and filters)
 
-| Método | Ruta                    | Descripción                      | Roles          |
-|--------|-------------------------|----------------------------------|----------------|
-| GET    | `/pedidos`              | Historial (filtros + paginación) | admin, cocina  |
-| GET    | `/pedidos/activos`      | Pedidos activos para KDS         | admin, cocina  |
-| GET    | `/pedidos/:id`          | Detalle de un pedido             | admin, cocina  |
-| POST   | `/pedidos`              | Crear pedido manualmente         | admin, cocina  |
-| PATCH  | `/pedidos/:id/estado`   | Actualizar estado del pedido     | admin, cocina  |
+GET    `/api/pedidos/activos`     Get active orders for KDS
 
-### Webhook (para n8n/WhatsApp)
+PATCH  `/api/pedidos/:id/estado`  Update order status
 
-| Método | Ruta                      | Descripción              | Auth Header             |
-|--------|---------------------------|--------------------------|-------------------------|
-| POST   | `/webhooks/pedido`        | Crear pedido vía webhook | `X-Webhook-Secret: ...` |
+GET    `/api/productos`           List all products (Admin)
 
-**Payload del webhook:**
-```json
-{
-  "telefono": "50688887777",
-  "nombre_cliente": "Juan Pérez",
-  "metodo_pago": "efectivo",
-  "notas": "Sin cebolla",
-  "items": [
-    { "producto_id": 1, "cantidad": 2, "modificadores": { "sin_cebolla": true } }
-  ]
-}
-```
-
-**Métodos de pago válidos:** `efectivo` | `tarjeta` | `transferencia` | `sinpe_movil`
-
-### Productos
-
-| Método | Ruta                        | Descripción                    | Roles |
-|--------|-----------------------------|--------------------------------|-------|
-| GET    | `/productos/publico`        | Listar disponibles (sin auth)  | —     |
-| GET    | `/productos`                | Listar todos                   | admin |
-| POST   | `/productos`                | Crear producto                 | admin |
-| PUT    | `/productos/:id`            | Actualizar producto            | admin |
-| PATCH  | `/productos/:id/disponible` | Toggle disponibilidad          | admin |
-| DELETE | `/productos/:id`            | Eliminar producto              | admin |
-
-### Usuarios
-
-| Método | Ruta              | Descripción        | Roles |
-|--------|-------------------|--------------------|-------|
-| GET    | `/usuarios`       | Listar usuarios    | admin |
-| POST   | `/usuarios`       | Crear usuario      | admin |
-| PUT    | `/usuarios/:id`   | Actualizar usuario | admin |
-| DELETE | `/usuarios/:id`   | Eliminar usuario   | admin |
-
-### Reportes
-
-| Método | Ruta                  | Descripción           | Roles |
-|--------|-----------------------|-----------------------|-------|
-| GET    | `/reportes/ventas`    | Reporte de ventas     | admin |
+GET    `/api/reportes/ventas`     Get sales reports (daily/weekly/monthly)
 
 ---
 
-## 🔄 WebSockets — Namespace `/cocina`
-
-El frontend se conecta automáticamente al namespace `/cocina` con un token JWT en el handshake.
-
-| Evento emitido por el servidor | Descripción                     |
-|--------------------------------|---------------------------------|
-| `nuevo_pedido`                 | Nuevo pedido creado             |
-| `pedido_actualizado`           | Estado de un pedido cambiado    |
-
----
-
-## 📜 Scripts disponibles
-
-### Backend (`/backend`)
-
-| Comando           | Descripción                              |
-|-------------------|------------------------------------------|
-| `npm run dev`     | Servidor de desarrollo con hot-reload    |
-| `npm run build`   | Compilar TypeScript a `/dist`            |
-| `npm run start`   | Ejecutar la versión compilada            |
-| `npm run seed`    | Sincronizar BD y cargar datos iniciales  |
-
-### Frontend (`/frontend`)
-
-| Comando           | Descripción                              |
-|-------------------|------------------------------------------|
-| `npm run dev`     | Dev server en `http://localhost:5173`    |
-| `npm run build`   | Build de producción en `/dist`           |
-| `npm run preview` | Preview del build de producción          |
-| `npm run lint`    | Lint con ESLint                          |
+## Project Structure
+chamos-house/
+├── backend/src/
+│   ├── config/          # DB connection, env validation
+│   ├── controllers/     # Route handlers (thin layer, no business logic)
+│   ├── middlewares/     # Auth, error handling, validation
+│   ├── models/          # Sequelize models (Usuario, Pedido, Producto)
+│   ├── routes/          # Express route definitions
+│   ├── services/        # Core business logic and transactions
+│   └── socket/          # Socket.io namespace and event managers
+└── frontend/src/
+    ├── components/      # Reusable UI elements (KDSColumn, PedidoCard)
+    ├── hooks/           # Custom React hooks (useKitchenSocket, useTickingTime)
+    ├── pages/           # Main views (KDSBoard, Dashboard)
+    ├── services/        # Encapsulated API calls
+    └── types/           # TypeScript interfaces
 
 ---
 
-## 🗃 Modelos de base de datos
+## What I'd Improve Next
 
-```
-usuarios
-  id, telefono (único), nombre, rol (cliente|cocina|admin), password, activo, f_creacion
-
-productos
-  id, nombre, descripcion, precio, categoria, disponible, f_creacion
-
-pedidos
-  id, usuario_id → usuarios.id, estado, metodo_pago, total, notas, f_creacion
-
-detalle_pedido
-  id, pedido_id → pedidos.id, producto_id → productos.id, cantidad, p_unitario, modificadores (JSON)
-```
+- [ ] Add integration tests for the webhook to order flow (currently only unit tests).
+- [ ] Implement a notification system for clients when their order reaches the `listo` (ready) state.
+- [ ] Dockerize the entire application (Backend, Frontend, and MySQL) for easier single-command deployment via `docker-compose`.
 
 ---
 
-## 🔄 Transiciones de estado de pedidos
+## Author
 
-Los pedidos siguen un flujo lineal pero permiten retroceder:
-
-```
-pendiente ──→ en_proceso ──→ listo ──→ entregado
-              ←──────────    ←──────
-```
-
-- `pendiente` → puede avanzar a `en_proceso`
-- `en_proceso` → puede avanzar a `listo` o retroceder a `pendiente`
-- `listo` → puede avanzar a `entregado` o retroceder a `en_proceso`
-- `entregado` → estado final, no se puede modificar
-
----
-
-## 🌐 Integración con n8n (WhatsApp → Pedido)
-
-1. Instala [n8n](https://n8n.io) localmente o en la nube.
-2. Crea un workflow con el trigger de **WhatsApp Business**.
-3. Extrae el número y los ítems del mensaje.
-4. Llama al endpoint `POST /api/webhooks/pedido` con el header `X-Webhook-Secret` que definiste en el `.env`.
-5. El pedido aparece automáticamente en el KDS de cocina via WebSocket.
-
----
-
-## 🔐 Variables de entorno — Referencia completa
-
-### `backend/.env`
-
-| Variable               | Requerida | Ejemplo                   | Descripción                        |
-|------------------------|-----------|---------------------------|------------------------------------|
-| `NODE_ENV`             | ✅        | `development`             | Entorno de ejecución               |
-| `PORT`                 | ✅        | `3001`                    | Puerto del servidor                |
-| `DB_HOST`              | ✅        | `localhost`               | Host MySQL                         |
-| `DB_PORT`              | ✅        | `3306`                    | Puerto MySQL                       |
-| `DB_NAME`              | ✅        | `chamos_house`            | Nombre de la base de datos         |
-| `DB_USER`              | ✅        | `root`                    | Usuario MySQL                      |
-| `DB_PASSWORD`          | ✅        | `password`                | Contraseña MySQL                   |
-| `DB_POOL_MAX`          | ⚙️        | `10`                      | Máximo de conexiones en pool       |
-| `DB_POOL_MIN`          | ⚙️        | `2`                       | Mínimo de conexiones en pool       |
-| `JWT_SECRET`           | ✅        | `64-char-random-string`   | Secreto para firmar JWT            |
-| `JWT_EXPIRES_IN`       | ⚙️        | `8h`                      | Duración del access token          |
-| `JWT_REFRESH_EXPIRES_IN`| ⚙️       | `7d`                      | Duración del refresh token         |
-| `FRONTEND_URL`         | ✅        | `http://localhost:5173`   | URL del frontend (CORS)            |
-| `WEBHOOK_SECRET`       | ✅        | `random-string`           | Secreto para el endpoint webhook   |
-| `RATE_LIMIT_WINDOW_MS` | ⚙️        | `900000`                  | Ventana de rate limit (ms)         |
-| `RATE_LIMIT_MAX`       | ⚙️        | `100`                     | Máx. peticiones por ventana        |
-
-### `frontend/.env`
-
-| Variable       | Requerida | Ejemplo                  | Descripción             |
-|----------------|-----------|--------------------------|-------------------------|
-| `VITE_API_URL` | ✅        | `http://localhost:3001`  | URL base del backend    |
+**Tayro Arce**  
+Full Stack Developer · AI Automation Engineer  
+[tayroarce@gmail.com](mailto:tayroarce@gmail.com)
