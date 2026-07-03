@@ -2,7 +2,7 @@ import type { Server as HttpServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { env } from '../config/env';
 import { registerCocinaNamespace } from './handlers/cocinaHandler';
-import { logger } from '../utils/logger';
+import { logger } from '../core/utils/logger';
 
 class SocketManager {
   private io: SocketIOServer | null = null;
@@ -13,8 +13,7 @@ class SocketManager {
         origin: env.frontendUrl,
         methods: ['GET', 'POST', 'PATCH'],
         credentials: true,
-        allowEIO3: true,
-      },
+        },
       transports: ['websocket', 'polling'],
       pingInterval: 25000,
       pingTimeout: 60000,

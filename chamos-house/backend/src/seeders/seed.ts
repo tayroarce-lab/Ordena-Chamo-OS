@@ -2,7 +2,7 @@ import '../config/env';
 import { sequelize } from '../config/database';
 import '../models';
 import { Usuario, Producto } from '../models';
-import { logger } from '../utils/logger';
+import { logger } from '../core/utils/logger';
 
 const PRODUCTOS_SEED = [
   // ── Papas ────────────────────────────────────────────────────────────

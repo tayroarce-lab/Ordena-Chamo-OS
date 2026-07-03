@@ -1,8 +1,8 @@
 import { sequelize } from '../config/database';
-import { Usuario } from './Usuario';
-import { Producto } from './Producto';
-import { Pedido } from './Pedido';
-import { DetallePedido } from './DetallePedido';
+import { Usuario } from '../modules/users/user.model';
+import { Producto } from '../modules/products/product.model';
+import { Pedido } from '../modules/orders/order.model';
+import { DetallePedido } from '../modules/orders/order-detail.model';
 
 Usuario.initialize(sequelize);
 Producto.initialize(sequelize);

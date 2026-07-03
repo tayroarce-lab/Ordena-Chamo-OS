@@ -1,15 +1,15 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { AppLayout } from '@/layouts/AppLayout';
-import { AuthLayout } from '@/layouts/AuthLayout';
-import { DashboardPage } from '@/pages/DashboardPage';
-import { KDSPage } from '@/pages/KDSPage';
-import { LoginPage } from '@/pages/LoginPage';
-import { PedidosPage } from '@/pages/PedidosPage';
-import { ProductosPage } from '@/pages/ProductosPage';
-import { UsuariosPage } from '@/pages/UsuariosPage';
-import { AnalyticsPage } from '@/pages/AnalyticsPage';
-import { useAuthStore } from '@/store/authStore';
+import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { AuthLayout } from '@/components/layout/AuthLayout';
+import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
+import { KDSPage } from '@/features/kds/pages/KDSPage';
+import { LoginPage } from '@/features/auth/pages/LoginPage';
+import { PedidosPage } from '@/features/orders/pages/PedidosPage';
+import { ProductosPage } from '@/features/products/pages/ProductosPage';
+import { UsuariosPage } from '@/features/users/pages/UsuariosPage';
+import { AnalyticsPage } from '@/features/analytics/pages/AnalyticsPage';
+import { useAuthStore } from '@/features/auth/store/authStore';
 
 function RootRedirect() {
   const { isAuthenticated, usuario } = useAuthStore();

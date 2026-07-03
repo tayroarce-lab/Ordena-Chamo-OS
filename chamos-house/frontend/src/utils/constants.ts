@@ -1,5 +1,5 @@
-import type { EstadoPedido } from '@/types/pedido';
-import type { RolUsuario } from '@/types/usuario';
+import type { EstadoPedido } from '@/features/orders/types/pedido';
+import type { RolUsuario } from '@/features/users/types/usuario';
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL ?? '/api';
 

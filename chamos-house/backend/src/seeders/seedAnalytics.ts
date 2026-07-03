@@ -2,7 +2,7 @@ import '../config/env';
 import { sequelize } from '../config/database';
 import '../models';
 import { Usuario, Producto, Pedido, DetallePedido } from '../models';
-import { logger } from '../utils/logger';
+import { logger } from '../core/utils/logger';
 import { EstadoPedido, MetodoPago } from '../types';
 
 const getRandomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -86,7 +86,7 @@ async function seedAnalytics(): Promise<void> {
           else if (pRand > 0.52) prodNombre = 'Tequeños';
           else if (pRand > 0.30) prodNombre = 'Salchipapa';
 
-          const prod = productos.find(p => p.nombre === prodNombre) || productos[0];
+          const prod = productos.find((p: any) => p.nombre === prodNombre) || productos[0];
           
           if (usedProducts.has(prod.id)) continue;
           usedProducts.add(prod.id);

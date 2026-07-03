@@ -1,6 +1,6 @@
 import type { Server as SocketIOServer, Namespace } from 'socket.io';
-import { AuthService } from '../../services/authService';
-import { logger } from '../../utils/logger';
+import { AuthService } from '../../modules/auth/auth.service';
+import { logger } from '../../core/utils/logger';
 import type {
   PedidoActualizadoSocket,
   PedidoCompletoSocket,

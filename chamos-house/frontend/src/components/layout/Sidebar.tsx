@@ -10,9 +10,9 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { NAV_ITEMS } from '@/utils/constants';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
-import { useUIStore } from '@/store/uiStore';
+import { useUIStore } from '@/stores/uiStore';
 
 const iconMap = {
   LayoutDashboard,

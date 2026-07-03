@@ -1,5 +1,5 @@
-import type { EstadoPedido, MetodoPago } from '@/types/pedido';
-import { ESTADO_LABELS } from '@/types/pedido';
+import type { EstadoPedido, MetodoPago } from '@/features/orders/types/pedido';
+import { ESTADO_LABELS } from '@/features/orders/types/pedido';
 
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('es-CR', {

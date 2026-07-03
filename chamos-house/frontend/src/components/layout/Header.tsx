@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { PanelLeft, PanelLeftClose } from 'lucide-react';
-import { useUIStore } from '@/store/uiStore';
+import { useUIStore } from '@/stores/uiStore';
 
 interface HeaderProps {
   title: string;

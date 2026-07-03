@@ -4,7 +4,7 @@ import { env } from './config/env';
 import { testConnection, sequelize } from './config/database';
 import './models';
 import { socketManager } from './socket/socketManager';
-import { logger } from './utils/logger';
+import { logger } from './core/utils/logger';
 
 async function bootstrap(): Promise<void> {
   try {

@@ -6,9 +6,9 @@ import compression from 'compression';
 import morgan from 'morgan';
 import { env, isDevelopment, isProduction } from './config/env';
 import routes from './routes';
-import { generalLimiter } from './middlewares/rateLimiter';
-import { notFoundHandler, globalErrorHandler } from './middlewares/error.middleware';
-import { morganStream } from './utils/logger';
+import { generalLimiter } from './core/middlewares/rateLimiter';
+import { notFoundHandler, globalErrorHandler } from './core/middlewares/error.middleware';
+import { morganStream } from './core/utils/logger';
 
 export function createApp(): express.Application {
   const app = express();

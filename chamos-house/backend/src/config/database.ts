@@ -1,6 +1,6 @@
 import { Sequelize } from 'sequelize';
 import { env, isDevelopment } from './env';
-import { logger } from '../utils/logger';
+import { logger } from '../core/utils/logger';
 
 export const sequelize = new Sequelize(
   env.db.name,
